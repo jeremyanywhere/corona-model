@@ -292,7 +292,7 @@ var Canvas = /** @class */ (function () {
         this.timeStamp = 0;
         console.log("Constructing..");
         this.x = 0;
-        this.populationSize = 500;
+        this.populationSize = 1500;
         this.checkDays = -1;
         this.canvas = document.getElementById('canvas');
         console.log("canvas =" + this.canvas);
