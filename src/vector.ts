@@ -164,7 +164,6 @@ class Region {
     }
 
     drawGridOnCanvasContext(ctxt: CanvasRenderingContext2D) {
-
         ctxt.fillStyle = "#000000"
         let color = ''
         for(let v of this.people.values()) {
