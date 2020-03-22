@@ -2,7 +2,7 @@
   "name": "corona-model",
   "version": "1.0.0",
   "description": "Primitive Model of Virus Spread",
-  "main": "index.php",
+  "main": "src/vector.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
