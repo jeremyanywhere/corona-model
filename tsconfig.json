@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "module": "none",
+        "target": "es6",
+        "sourceMap": true,
+        "strict": false,
+        "declaration": true,
+        "removeComments": true,
+        "noImplicitAny": true,
+        "rootDir": "./src",
+        "outDir": "./dist",
+    },
+    "lib": [
+            "es6",
+            "dom"
+    ],
+}
