@@ -90,6 +90,7 @@ var Region = /** @class */ (function () {
             this.movements = 0;
             this.days++;
         }
+        var spread = 1;
         var moved = 0;
         var couldntMove = 0;
         var nextGen = new Map();
@@ -98,14 +99,14 @@ var Region = /** @class */ (function () {
                 var v = _c.value;
                 // after 1 infected day we can infect others
                 if (v.infectedDays > 1) {
-                    // get neighbours and infect 3 of them.
-                    var spread = 0;
+                    // get neighbours and infect n of them.
+                    var spread_1 = 0;
                     for (var x = -1; x < 2; x++) {
                         for (var y = -1; y < 3; y++) {
-                            if ((x != 0 || y != 0) && spread < 3) {
+                            if ((x != 0 || y != 0) && spread_1 < 1) {
                                 var h = this.xyToIndex((x + v.x + v.width) % v.width, (y + v.y + v.height) % v.height);
                                 if (this.people.has(h)) {
-                                    spread++;
+                                    spread_1++;
                                     var neighb = this.people.get(h);
                                     if (neighb.infectedDays < 1 && !neighb.recovered) {
                                         neighb.infectedDays = 1;
@@ -117,7 +118,7 @@ var Region = /** @class */ (function () {
                     }
                     // chance of dying every day adds up to about 1.4% chance. 
                     if (Math.random() < 0.000664) {
-                        v.died = false; // true.. just debugging
+                        v.died = true;
                         this.deaths++;
                         //console.log("aaaaaaaarrrrrgggghhh - " + this.deaths)
                     }
@@ -196,16 +197,15 @@ var Region = /** @class */ (function () {
             finally { if (e_2) throw e_2.error; }
         }
         // dashboard
-        var dashX = this.width * .9 * this.scale;
-        var dashY = this.width * .1 * this.scale;
-        var border = 1;
+        var border = 2;
         var text = ["Population:" + this.population,
             "Days:" + this.days,
             "Infected: " + this.infected,
             "Deaths:" + this.deaths,
             "Recovered:" + this.recovered];
-        var textW = 50;
-        var textH = 10;
+        var fontSize = 3 * this.scale;
+        var textW = fontSize / 3 * 2;
+        var textH = fontSize;
         var longestText = 0;
         try {
             for (var text_1 = __values(text), text_1_1 = text_1.next(); !text_1_1.done; text_1_1 = text_1.next()) {
@@ -221,12 +221,14 @@ var Region = /** @class */ (function () {
             }
             finally { if (e_3) throw e_3.error; }
         }
-        ctxt.font = "" + this.scale * 3 + "px Verdana";
-        ctxt.fillStyle = "#FFFFFF";
-        ctxt.fillRect(dashX - border, dashY - border - (this.scale * 3), longestText * 2 * this.scale, textH * 2 * text.length);
+        var dashX = (this.width * this.scale) - (longestText * textW);
+        var dashY = textH * 3;
+        ctxt.font = "" + fontSize + "px Verdana";
+        //ctxt.fillStyle = "#FFF111"
+        ctxt.clearRect(dashX - border, dashY - border, longestText * textW, textH * text.length + 2 * border);
         ctxt.fillStyle = "#000000";
         for (var pos = 0; pos < text.length; pos++) {
-            ctxt.fillText(text[pos], dashX, dashY + textH * 2 * pos);
+            ctxt.fillText(text[pos], dashX, dashY + textH * (pos + 1));
         }
     };
     Region.prototype.dumpGrid = function () {
