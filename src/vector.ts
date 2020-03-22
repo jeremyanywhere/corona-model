@@ -298,7 +298,7 @@ class Canvas {
     constructor() {
         console.log("Constructing..")
         this.x = 0
-        this.populationSize = 500
+        this.populationSize = 1500
         this.checkDays = -1
         this.canvas = document.getElementById('canvas') as
                  HTMLCanvasElement;
