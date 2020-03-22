@@ -1,0 +1,98 @@
+2020-03-22T14:13:18.452428+00:00 app[api]: Initial release by user jeremycustomer@gmail.com
+2020-03-22T14:13:18.575890+00:00 app[api]: Enable Logplex by user jeremycustomer@gmail.com
+2020-03-22T14:13:18.575890+00:00 app[api]: Release v2 created by user jeremycustomer@gmail.com
+2020-03-22T14:13:18.452428+00:00 app[api]: Release v1 created by user jeremycustomer@gmail.com
+2020-03-22T14:22:49.704083+00:00 heroku[router]: at=info code=H81 desc="Blank app" method=GET path="/" host=corona-model.herokuapp.com request_id=d68958ca-a51a-4f90-941f-ff0116517559 fwd="173.178.226.77" dyno= connect= service= status=502 bytes= protocol=https
+2020-03-22T14:22:49.909877+00:00 heroku[router]: at=info code=H81 desc="Blank app" method=GET path="/favicon.ico" host=corona-model.herokuapp.com request_id=51111964-f7a6-4d08-ac00-ec051e5f8c55 fwd="173.178.226.77" dyno= connect= service= status=502 bytes= protocol=https
+2020-03-22T14:22:57.358875+00:00 heroku[router]: at=info code=H81 desc="Blank app" method=GET path="/" host=corona-model.herokuapp.com request_id=325c652c-d0f2-48f0-a323-6be51742d623 fwd="173.178.226.77" dyno= connect= service= status=502 bytes= protocol=https
+2020-03-22T14:22:57.546194+00:00 heroku[router]: at=info code=H81 desc="Blank app" method=GET path="/favicon.ico" host=corona-model.herokuapp.com request_id=2291ef2b-fc9f-4a04-b0c2-3f3968096c65 fwd="173.178.226.77" dyno= connect= service= status=502 bytes= protocol=https
+2020-03-22T16:23:30.000000+00:00 app[api]: Build started by user jeremycustomer@gmail.com
+2020-03-22T16:23:32.000000+00:00 app[api]: Build failed -- check your build output: https://dashboard.heroku.com/apps/f1785fb9-69d7-45ad-9582-f583922447a2/activity/builds/541f5fe3-5216-4272-9b8c-0cde91d86f34
+2020-03-22T16:29:08.000000+00:00 app[api]: Build started by user jeremycustomer@gmail.com
+2020-03-22T16:29:19.849883+00:00 app[api]: Deploy bb94a927 by user jeremycustomer@gmail.com
+2020-03-22T16:29:19.865060+00:00 app[api]: Scaled to web@1:Free by user jeremycustomer@gmail.com
+2020-03-22T16:29:19.849883+00:00 app[api]: Release v3 created by user jeremycustomer@gmail.com
+2020-03-22T16:29:20.000000+00:00 app[api]: Build succeeded
+2020-03-22T16:29:21.736819+00:00 heroku[web.1]: Starting process with command `npm start`
+2020-03-22T16:29:24.031563+00:00 heroku[web.1]: State changed from starting to crashed
+2020-03-22T16:29:24.039548+00:00 heroku[web.1]: State changed from crashed to starting
+2020-03-22T16:29:23.963435+00:00 app[web.1]: npm ERR! missing script: start
+2020-03-22T16:29:23.971441+00:00 app[web.1]: 
+2020-03-22T16:29:23.971725+00:00 app[web.1]: npm ERR! A complete log of this run can be found in:
+2020-03-22T16:29:23.971838+00:00 app[web.1]: npm ERR!     /app/.npm/_logs/2020-03-22T16_29_23_964Z-debug.log
+2020-03-22T16:29:24.013103+00:00 heroku[web.1]: Process exited with status 1
+2020-03-22T16:29:25.872814+00:00 heroku[web.1]: Starting process with command `npm start`
+2020-03-22T16:29:28.178992+00:00 heroku[web.1]: State changed from starting to crashed
+2020-03-22T16:29:28.162690+00:00 heroku[web.1]: Process exited with status 1
+2020-03-22T16:29:28.097493+00:00 app[web.1]: npm ERR! missing script: start
+2020-03-22T16:29:28.106789+00:00 app[web.1]: 
+2020-03-22T16:29:28.106967+00:00 app[web.1]: npm ERR! A complete log of this run can be found in:
+2020-03-22T16:29:28.107060+00:00 app[web.1]: npm ERR!     /app/.npm/_logs/2020-03-22T16_29_28_098Z-debug.log
+2020-03-22T16:52:16.602177+00:00 heroku[web.1]: State changed from crashed to starting
+2020-03-22T16:52:18.859461+00:00 heroku[web.1]: Starting process with command `npm start`
+2020-03-22T16:52:22.847491+00:00 heroku[web.1]: State changed from starting to crashed
+2020-03-22T16:52:22.827023+00:00 heroku[web.1]: Process exited with status 1
+2020-03-22T16:52:22.733489+00:00 app[web.1]: npm ERR! missing script: start
+2020-03-22T16:52:22.744596+00:00 app[web.1]: 
+2020-03-22T16:52:22.746575+00:00 app[web.1]: npm ERR! A complete log of this run can be found in:
+2020-03-22T16:52:22.746900+00:00 app[web.1]: npm ERR!     /app/.npm/_logs/2020-03-22T16_52_22_735Z-debug.log
+2020-03-22T17:01:31.000000+00:00 app[api]: Build started by user jeremycustomer@gmail.com
+2020-03-22T17:01:43.724281+00:00 app[api]: Deploy 42551ee9 by user jeremycustomer@gmail.com
+2020-03-22T17:01:44.312522+00:00 heroku[web.1]: State changed from crashed to starting
+2020-03-22T17:01:43.724281+00:00 app[api]: Release v4 created by user jeremycustomer@gmail.com
+2020-03-22T17:01:44.000000+00:00 app[api]: Build succeeded
+2020-03-22T17:01:46.787317+00:00 heroku[web.1]: Starting process with command `npm start`
+2020-03-22T17:01:49.674539+00:00 heroku[web.1]: State changed from starting to crashed
+2020-03-22T17:01:49.592296+00:00 app[web.1]: npm ERR! missing script: start
+2020-03-22T17:01:49.602040+00:00 app[web.1]: 
+2020-03-22T17:01:49.602301+00:00 app[web.1]: npm ERR! A complete log of this run can be found in:
+2020-03-22T17:01:49.602379+00:00 app[web.1]: npm ERR!     /app/.npm/_logs/2020-03-22T17_01_49_593Z-debug.log
+2020-03-22T17:01:49.656948+00:00 heroku[web.1]: Process exited with status 1
+2020-03-22T17:01:53.290971+00:00 heroku[router]: at=error code=H10 desc="App crashed" method=GET path="/" host=corona-model.herokuapp.com request_id=1f01433a-39e6-424b-aca6-55ee7fb1e091 fwd="173.178.226.77" dyno= connect= service= status=503 bytes= protocol=https
+2020-03-22T17:01:53.730816+00:00 heroku[router]: at=error code=H10 desc="App crashed" method=GET path="/favicon.ico" host=corona-model.herokuapp.com request_id=b5bc981d-aa53-4bc9-9344-efda77033778 fwd="173.178.226.77" dyno= connect= service= status=503 bytes= protocol=https
+2020-03-22T17:02:29.116694+00:00 heroku[router]: at=error code=H10 desc="App crashed" method=GET path="/" host=corona-model.herokuapp.com request_id=86cb74fa-fd1a-45b1-b1df-0792e14b4b81 fwd="173.178.226.77" dyno= connect= service= status=503 bytes= protocol=https
+2020-03-22T17:02:29.919924+00:00 heroku[router]: at=error code=H10 desc="App crashed" method=GET path="/favicon.ico" host=corona-model.herokuapp.com request_id=e2b31141-64d2-4d38-b29f-5a583d458681 fwd="173.178.226.77" dyno= connect= service= status=503 bytes= protocol=https
+2020-03-22T17:03:03.000000+00:00 app[api]: Build started by user jeremycustomer@gmail.com
+2020-03-22T17:03:14.483300+00:00 heroku[web.1]: State changed from crashed to starting
+2020-03-22T17:03:14.181374+00:00 app[api]: Deploy 406ede14 by user jeremycustomer@gmail.com
+2020-03-22T17:03:14.181374+00:00 app[api]: Release v5 created by user jeremycustomer@gmail.com
+2020-03-22T17:03:14.000000+00:00 app[api]: Build succeeded
+2020-03-22T17:03:16.228845+00:00 heroku[web.1]: Starting process with command `node index.js`
+2020-03-22T17:03:18.146730+00:00 heroku[web.1]: State changed from starting to crashed
+2020-03-22T17:03:18.129390+00:00 heroku[web.1]: Process exited with status 0
+2020-03-22T17:03:51.232197+00:00 heroku[router]: at=error code=H10 desc="App crashed" method=GET path="/" host=corona-model.herokuapp.com request_id=f17a740f-3925-41cc-8079-60bd1f7e3c44 fwd="173.178.226.77" dyno= connect= service= status=503 bytes= protocol=https
+2020-03-22T17:03:51.372552+00:00 heroku[router]: at=error code=H10 desc="App crashed" method=GET path="/favicon.ico" host=corona-model.herokuapp.com request_id=34969e32-d80a-4bfc-94b6-bffa34e73d28 fwd="173.178.226.77" dyno= connect= service= status=503 bytes= protocol=https
+2020-03-22T17:04:16.815601+00:00 heroku[web.1]: State changed from crashed to starting
+2020-03-22T17:04:18.581173+00:00 heroku[web.1]: Starting process with command `node index.js`
+2020-03-22T17:04:20.205919+00:00 heroku[web.1]: State changed from starting to crashed
+2020-03-22T17:04:20.188630+00:00 heroku[web.1]: Process exited with status 0
+2020-03-22T17:20:57.375047+00:00 heroku[router]: at=error code=H10 desc="App crashed" method=GET path="/" host=corona-model.herokuapp.com request_id=b0ab0506-61ab-45c5-89a1-6eacd6e4e260 fwd="173.178.226.77" dyno= connect= service= status=503 bytes= protocol=https
+2020-03-22T17:20:57.510558+00:00 heroku[router]: at=error code=H10 desc="App crashed" method=GET path="/favicon.ico" host=corona-model.herokuapp.com request_id=7458ae9e-49c4-4bfd-b8fe-1e807b8974fc fwd="173.178.226.77" dyno= connect= service= status=503 bytes= protocol=https
+2020-03-22T17:21:07.505845+00:00 heroku[router]: at=error code=H10 desc="App crashed" method=GET path="/" host=corona-model.herokuapp.com request_id=5289e19c-dd97-426b-a53f-59c607fd80b3 fwd="173.178.226.77" dyno= connect= service= status=503 bytes= protocol=https
+2020-03-22T17:21:07.645053+00:00 heroku[router]: at=error code=H10 desc="App crashed" method=GET path="/favicon.ico" host=corona-model.herokuapp.com request_id=9d61d25b-3187-4798-81ad-bea337738999 fwd="173.178.226.77" dyno= connect= service= status=503 bytes= protocol=https
+2020-03-22T17:22:39.000000+00:00 app[api]: Build started by user jeremycustomer@gmail.com
+2020-03-22T17:22:51.149001+00:00 heroku[web.1]: State changed from crashed to starting
+2020-03-22T17:22:50.736835+00:00 app[api]: Release v6 created by user jeremycustomer@gmail.com
+2020-03-22T17:22:50.736835+00:00 app[api]: Deploy cd60d81c by user jeremycustomer@gmail.com
+2020-03-22T17:22:51.000000+00:00 app[api]: Build succeeded
+2020-03-22T17:22:52.913211+00:00 heroku[web.1]: Starting process with command `node index.js`
+2020-03-22T17:22:55.182857+00:00 heroku[web.1]: State changed from starting to crashed
+2020-03-22T17:22:55.187250+00:00 heroku[web.1]: State changed from crashed to starting
+2020-03-22T17:22:55.166589+00:00 heroku[web.1]: Process exited with status 0
+2020-03-22T17:22:56.899014+00:00 heroku[web.1]: Starting process with command `node index.js`
+2020-03-22T17:22:58.806483+00:00 heroku[web.1]: State changed from starting to crashed
+2020-03-22T17:22:58.790058+00:00 heroku[web.1]: Process exited with status 0
+2020-03-22T17:29:59.000000+00:00 app[api]: Build started by user jeremycustomer@gmail.com
+2020-03-22T17:30:11.461186+00:00 heroku[web.1]: State changed from crashed to starting
+2020-03-22T17:30:11.000000+00:00 app[api]: Build succeeded
+2020-03-22T17:30:10.908295+00:00 app[api]: Deploy fc16ea5f by user jeremycustomer@gmail.com
+2020-03-22T17:30:10.908295+00:00 app[api]: Release v7 created by user jeremycustomer@gmail.com
+2020-03-22T17:30:13.259687+00:00 heroku[web.1]: Starting process with command `npm start`
+2020-03-22T17:30:15.172230+00:00 heroku[web.1]: State changed from starting to crashed
+2020-03-22T17:30:15.155751+00:00 heroku[web.1]: Process exited with status 1
+2020-03-22T17:30:15.105525+00:00 app[web.1]: npm ERR! missing script: start
+2020-03-22T17:30:15.109447+00:00 app[web.1]: 
+2020-03-22T17:30:15.109712+00:00 app[web.1]: npm ERR! A complete log of this run can be found in:
+2020-03-22T17:30:15.109844+00:00 app[web.1]: npm ERR!     /app/.npm/_logs/2020-03-22T17_30_15_106Z-debug.log
+2020-03-22T17:30:23.324305+00:00 heroku[router]: at=error code=H10 desc="App crashed" method=GET path="/" host=corona-model.herokuapp.com request_id=2cb81f7f-2e62-4ee9-99dd-14d4dd3dc480 fwd="173.178.226.77" dyno= connect= service= status=503 bytes= protocol=https
+2020-03-22T17:30:23.814351+00:00 heroku[router]: at=error code=H10 desc="App crashed" method=GET path="/favicon.ico" host=corona-model.herokuapp.com request_id=304aadb8-af21-49ab-add8-690bb0447b83 fwd="173.178.226.77" dyno= connect= service= status=503 bytes= protocol=https
