@@ -95,6 +95,7 @@ class Region {
             this.movements = 0
             this.days++
         }
+        let spread = 1
         let moved = 0
         let couldntMove = 0
         var nextGen = new Map<number,VirusVector>()
@@ -102,11 +103,11 @@ class Region {
         for (let v of this.people.values()) {
             // after 1 infected day we can infect others
             if (v.infectedDays > 1) {
-                // get neighbours and infect 3 of them.
+                // get neighbours and infect n of them.
                 let spread = 0
                 for (let x = -1; x < 2; x ++) {
                     for (let y = -1; y < 3; y++) {
-                        if ((x!=0 || y!=0) && spread < 3) {
+                        if ((x!=0 || y!=0) && spread < 1) {
                             let h = this.xyToIndex((x+v.x+v.width)%v.width, (y+v.y+v.height)%v.height)
                             if (this.people.has(h)) {
                                 spread++
@@ -121,7 +122,7 @@ class Region {
                 }
                 // chance of dying every day adds up to about 1.4% chance. 
                 if (Math.random() < 0.000664) {
-                    v.died = false  // true.. just debugging
+                    v.died = true  
                     this.deaths++
                     //console.log("aaaaaaaarrrrrgggghhh - " + this.deaths)
                 }
@@ -179,28 +180,31 @@ class Region {
             //console.log("x and y are "+v.x+","+v.y)
         }
         // dashboard
-        var dashX = this.width*.9*this.scale
-        var dashY = this.width*.1*this.scale
-        var border = 1
+        
+        var border = 2
         var text = ["Population:" + this.population,
                     "Days:" + this.days, 
                     "Infected: "+ this.infected,
                     "Deaths:"+this.deaths,
                     "Recovered:" + this.recovered]
-        var textW = 50
-        var textH = 10
+        
+        var fontSize = 3*this.scale
+        var textW = fontSize/3*2
+        var textH = fontSize
         
         let longestText = 0
         for (let t of text) {
             if (t.length > longestText) 
                 longestText = t.length
         }
-        ctxt.font = ""+this.scale*3+"px Verdana";
-        ctxt.fillStyle = "#FFFFFF"
-        ctxt.fillRect(dashX-border,dashY-border-(this.scale*3),longestText*2*this.scale, textH*2*text.length)
+        var dashX = (this.width*this.scale)-(longestText*textW) 
+        var dashY = textH*3
+        ctxt.font = ""+fontSize+"px Verdana";
+        //ctxt.fillStyle = "#FFF111"
+        ctxt.clearRect(dashX - border,dashY-border,longestText*textW, textH*text.length + 2*border)
         ctxt.fillStyle = "#000000"
         for (let pos=0; pos< text.length; pos++) {
-            ctxt.fillText(text[pos], dashX, dashY+textH*2*pos)
+            ctxt.fillText(text[pos], dashX, dashY+textH*(pos+1))
         }
     }
 
@@ -295,10 +299,10 @@ class Canvas {
     private timeStamp: number = 0;
     private populationSize: number
 
-    constructor() {
+    constructor(population: number) {
         console.log("Constructing..")
         this.x = 0
-        this.populationSize = 1500
+        this.populationSize = population
         this.checkDays = -1
         this.canvas = document.getElementById('canvas') as
                  HTMLCanvasElement;
@@ -338,6 +342,6 @@ class Canvas {
     }
     
 }
-new Canvas().start();
+
 //new Canvas().test();
 

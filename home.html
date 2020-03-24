@@ -1,16 +1,79 @@
+
 <html>
 
 <head>
-    <title>Canvas demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .column {
+        float: left;
+        padding: 10px;
+        }
+        .sidebar {
+            width: 25%;
+        }
+        .content {
+            width: 75%;
+        }
+    </style>
+        
 </head>
 
 <body>
-    <canvas id="canvas" width="1200" height="800"
-            style="border: 1px solid black;">
-    </canvas>
-    <p id="clear">clear</p>
-    <script> var exports = {}; </script>
+
+<!-- Simple Textfield -->
+
+
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.min.js">
+    
+
     <script src="./src/vector.js"></script>
+
+    <script>
+
+        function start() {
+            var p = document.getElementById("population").value;
+            var pl1p = ""
+            var pl2 = document.getElementById("p2").value;
+            var pl2p = ""
+            new Canvas(1500).start();
+        }
+    </script>
+    <div class = "column sidebar">
+        <div class="mdl-textfield mdl-js-textfield">
+            <p>
+                <label class="mdl-textfield__label" for="population">Population</label>
+                <input class="mdl-textfield__input" type="text" id="population" value="1500">
+            </p>
+            <p>
+                <label class="mdl-textfield__label" for="p2">Player 2 (url:port)</label>
+                <input class="mdl-textfield__input" type="text" id="p2" value="https://dumb-c4-bot.herokuapp.com">
+
+            </p>
+
+            <p>
+                <br></br>
+                <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" onClick="start()">
+                Start Simulation
+                </button>
+            </p>
+        </div>
+    </div>
+    <div class = "column content"></div>
+        <p>
+        <canvas id="canvas" width="1200" height="800"
+        style="border: 1px solid black;">
+        </canvas>
+        <script> var exports = {}; </script>
+        <script src="./src/vector.js"></script>
+        </p>
+        <p id="result"></p>
+    </div>
+
 </body>
 
 </html>
