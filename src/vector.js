@@ -1,4 +1,3 @@
-"use strict";
 /// basically a grid, which has a population of vectors.. who could have 
 var __values = (this && this.__values) || function (o) {
     var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
@@ -10,13 +9,14 @@ var __values = (this && this.__values) || function (o) {
         }
     };
 };
-exports.__esModule = true;
+//import { timingSafeEqual } from "crypto";
 // for purposes of this code. A Vector is a carrier of a virus, not a data structure
 var Region = /** @class */ (function () {
-    function Region(population, x, y, scale) {
+    function Region(population, movement, x, y, scale) {
         console.log("constructing population.. " + x + "," + y + "scale:" + scale);
         this.scale = scale;
         this.population = population;
+        this.movement = movement;
         this.width = Math.floor(x / scale);
         this.height = Math.floor(y / scale);
         this.people = new Map();
@@ -27,26 +27,13 @@ var Region = /** @class */ (function () {
         this.movements = 0; // 12 to a day. 
         this.infected = 0;
         this.recovered = 0;
+        console.log("population movement with " + this.movement);
     }
     Region.prototype.xyToIndex = function (x, y) {
         return y * this.width + x;
     };
     Region.prototype.indexToXY = function (i) {
         return { x: i % this.width, y: Math.floor(i / this.width) };
-    };
-    Region.prototype.createVectors2 = function () {
-        var v1 = new VirusVector(50, 50, this.width, this.height);
-        v1.infectedDays = 2;
-        var n = [];
-        var h = v1.hash();
-        this.people.set(h, v1);
-        this.logVector("first one..   :", v1);
-        for (var x = 1; x < 5; x++) {
-            var p = this.indexToXY(x * this.width + h);
-            var nv = new VirusVector(p.x, p.y, this.width, this.height);
-            this.logVector("   other ones.:", nv);
-            this.people.set(h + x, nv);
-        }
     };
     Region.prototype.logVector = function (t, v) {
         console.log(t + " V - (x,y) - (" + v.x + "," + v.y + ")");
@@ -55,7 +42,7 @@ var Region = /** @class */ (function () {
         for (var p = 0; p < this.population; p++) {
             var x = Math.floor(Math.random() * this.width);
             var y = Math.floor(Math.random() * this.height);
-            var vv = new VirusVector(x, y, this.width, this.height);
+            var vv = new VirusVector(this.movement, x, y, this.width, this.height);
             var h = vv.hash();
             // if random position is taken, just scoot along in linear fashion to find a spot. 
             if (this.people.has(h)) {
@@ -64,7 +51,7 @@ var Region = /** @class */ (function () {
                     nxt = nxt + 1 % (this.width * this.height);
                 }
                 var n = this.indexToXY(nxt);
-                vv = new VirusVector(n.x, n.y, this.width, this.height);
+                vv = new VirusVector(this.movement, n.x, n.y, this.width, this.height);
                 h = nxt;
             }
             if (p == 0) {
@@ -239,10 +226,7 @@ var Region = /** @class */ (function () {
 }());
 /// keeps going in the same direction with a low probability of changing (drunken walk)
 var VirusVector = /** @class */ (function () {
-    function VirusVector(x, y, width, height) {
-        // infected randomly by proximity (neighbouring cell) with infection probability defined by 
-        // WHO reports.  
-        this.DRUNKNESS = 0.05;
+    function VirusVector(drunkness, x, y, width, height) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -253,6 +237,7 @@ var VirusVector = /** @class */ (function () {
         this.direction = { x: 0, y: 0 };
         this.direction.x = Math.floor(Math.random() * 3) - 1;
         this.direction.y = Math.floor(Math.random() * 3) - 1;
+        this.drunkness = drunkness;
     }
     /// gets an x and y coord e.g. using the direction + width of grid. 
     // (0,-1) or (1,1) allows to test if there is something else at that point. 
@@ -273,7 +258,7 @@ var VirusVector = /** @class */ (function () {
     };
     // change direction randomly according to random walk rules. 
     VirusVector.prototype.changeDirection = function () {
-        if (Math.random() > this.DRUNKNESS)
+        if (Math.random() > this.drunkness)
             return;
         this.direction.x = 0;
         this.direction.y = 0;
@@ -289,12 +274,12 @@ var VirusVector = /** @class */ (function () {
 }());
 // abstraction of our canvas element. 
 var Canvas = /** @class */ (function () {
-    function Canvas() {
+    function Canvas(population, movement) {
         this.delay = 500;
         this.timeStamp = 0;
         console.log("Constructing..");
         this.x = 0;
-        this.populationSize = 1500;
+        this.populationSize = population;
         this.checkDays = -1;
         this.canvas = document.getElementById('canvas');
         console.log("canvas =" + this.canvas);
@@ -302,6 +287,7 @@ var Canvas = /** @class */ (function () {
         console.log("context = " + this.context);
         this.context.lineWidth = 1;
         this.scale = 5;
+        this.movement = movement;
     }
     Canvas.prototype.watchdog = function () {
         // annoyingly we need this because the "requestAnimationFrame" method fails from
@@ -315,8 +301,9 @@ var Canvas = /** @class */ (function () {
         this.redraw();
     };
     Canvas.prototype.start = function () {
+        //must garbage collect the old one. 
         console.log("Starting..");
-        this.region = new Region(this.populationSize, this.canvas.width, this.canvas.height, this.scale);
+        this.region = new Region(this.populationSize, this.movement, this.canvas.width, this.canvas.height, this.scale);
         this.redraw();
         setInterval(this.watchdog.bind(this), this.delay);
     };
@@ -332,5 +319,4 @@ var Canvas = /** @class */ (function () {
     };
     return Canvas;
 }());
-new Canvas().start();
 //new Canvas().test();

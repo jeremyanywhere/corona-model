@@ -38,9 +38,9 @@
         function start() {
             var p = document.getElementById("population").value;
             var pl1p = ""
-            var pl2 = document.getElementById("p2").value;
+            var movement = document.getElementById("mvm").value;
             var pl2p = ""
-            new Canvas(1500).start();
+            new Canvas(p, movement).start();
         }
     </script>
     <div class = "column sidebar">
@@ -50,8 +50,8 @@
                 <input class="mdl-textfield__input" type="text" id="population" value="1500">
             </p>
             <p>
-                <label class="mdl-textfield__label" for="p2">Player 2 (url:port)</label>
-                <input class="mdl-textfield__input" type="text" id="p2" value="https://dumb-c4-bot.herokuapp.com">
+                <label class="mdl-textfield__label" for="mvm">Movement (range 0-1)</label>
+                <input class="mdl-textfield__input" type="text" id="mvm" value="0.02">
 
             </p>
 
@@ -63,7 +63,7 @@
             </p>
         </div>
     </div>
-    <div class = "column content"></div>
+    <div class = "column content">
         <p>
         <canvas id="canvas" width="1200" height="800"
         style="border: 1px solid black;">
@@ -71,7 +71,6 @@
         <script> var exports = {}; </script>
         <script src="./src/vector.js"></script>
         </p>
-        <p id="result"></p>
     </div>
 
 </body>

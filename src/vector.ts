@@ -1,7 +1,7 @@
 
 /// basically a grid, which has a population of vectors.. who could have 
 
-import { timingSafeEqual } from "crypto";
+//import { timingSafeEqual } from "crypto";
 
 // for purposes of this code. A Vector is a carrier of a virus, not a data structure
 class Region {
@@ -10,6 +10,7 @@ class Region {
     height: number
     scale: number
     population: number
+    movement:number
     days: number
     movements: number
     deaths: number
@@ -17,10 +18,12 @@ class Region {
     recovered:number
     counter:number
 
-    constructor(population: number, x: number, y: number, scale: number) {
+    constructor(population: number, movement:number, x: number, y: number, scale: number) {
         console.log("constructing population.. " + x + "," + y + "scale:" + scale)
+        
         this.scale = scale;
         this.population = population
+        this.movement = movement
         this.width = Math.floor(x/scale);
         this.height = Math.floor(y/scale);
         this.people = new Map<number,VirusVector>()
@@ -31,6 +34,8 @@ class Region {
         this.movements = 0 // 12 to a day. 
         this.infected = 0
         this.recovered = 0
+        console.log("population movement with "+ this.movement)
+        
         
     }
     xyToIndex(x: number, y: number) {
@@ -40,20 +45,7 @@ class Region {
         return {x: i%this.width, y: Math.floor(i/this.width)}
     }
 
-    createVectors2() {
-        let v1 = new VirusVector(50,50,this.width, this.height)
-        v1.infectedDays = 2
-        let n = []
-        let h = v1.hash()
-        this.people.set(h,v1)
-        this.logVector("first one..   :",v1)
-        for (let x = 1; x < 5; x++) {
-            let p = this.indexToXY(x*this.width+h)
-            let nv = new VirusVector(p.x, p.y, this.width, this.height)
-            this.logVector("   other ones.:", nv)
-            this.people.set(h+x, nv)
-        }
-    }
+
     logVector(t:string, v:VirusVector) {
         console.log(t+" V - (x,y) - ("+v.x+","+v.y+")")
     }
@@ -61,7 +53,7 @@ class Region {
         for (let p=0;p<this.population;p++) {
             let x = Math.floor(Math.random() * this.width)
             let y = Math.floor(Math.random() * this.height)
-            let vv = new VirusVector(x,y,this.width, this.height)
+            let vv = new VirusVector(this.movement, x,y,this.width, this.height)
             let h = vv.hash()
             // if random position is taken, just scoot along in linear fashion to find a spot. 
             if (this.people.has(h)) {
@@ -70,7 +62,7 @@ class Region {
                     nxt = nxt+1%(this.width*this.height)
                 }
                 let n = this.indexToXY(nxt)
-                vv = new VirusVector(n.x,n.y,this.width, this.height)
+                vv = new VirusVector(this.movement, n.x,n.y,this.width, this.height)
                 h = nxt
              }
              if (p==0) {
@@ -224,7 +216,7 @@ class VirusVector {
 
     // infected randomly by proximity (neighbouring cell) with infection probability defined by 
     // WHO reports.  
-    DRUNKNESS = 0.05 
+    drunkness: number
     infectedDays: number
     // prevents re-infection. 
     recovered: boolean
@@ -238,7 +230,7 @@ class VirusVector {
     oldX: number
     oldY: number
     direction: {x:number, y:number}
-    constructor(x:number, y:number, width:number, height:number) {
+    constructor(drunkness:number, x:number, y:number, width:number, height:number) {
         this.x = x
         this.y = y
         this.width = width
@@ -249,6 +241,7 @@ class VirusVector {
         this.direction = {x:0, y:0}
         this.direction.x = Math.floor(Math.random() * 3)-1
         this.direction.y = Math.floor(Math.random() * 3)-1
+        this.drunkness = drunkness
     }
 
    /// gets an x and y coord e.g. using the direction + width of grid. 
@@ -271,7 +264,7 @@ class VirusVector {
    }
     // change direction randomly according to random walk rules. 
     private changeDirection() {
-        if (Math.random() > this.DRUNKNESS)
+        if (Math.random() > this.drunkness)
             return
         this.direction.x = 0; this.direction.y = 0
         // might both be zero
@@ -298,8 +291,9 @@ class Canvas {
     private delay: number = 500;
     private timeStamp: number = 0;
     private populationSize: number
+    private movement: number
 
-    constructor(population: number) {
+    constructor(population: number, movement: number) {
         console.log("Constructing..")
         this.x = 0
         this.populationSize = population
@@ -311,6 +305,7 @@ class Canvas {
         console.log(`context = ${this.context}`)
         this.context.lineWidth = 1;
         this.scale = 5;
+        this.movement = movement
     }
     private watchdog() {
         // annoyingly we need this because the "requestAnimationFrame" method fails from
@@ -324,8 +319,9 @@ class Canvas {
         this.redraw()
     }
     start() {
+        //must garbage collect the old one. 
         console.log("Starting..")
-        this.region = new Region(this.populationSize, this.canvas.width, this.canvas.height, this.scale)
+        this.region = new Region(this.populationSize, this.movement,  this.canvas.width, this.canvas.height, this.scale)
         this.redraw()
         setInterval(this.watchdog.bind(this), this.delay);
     }
