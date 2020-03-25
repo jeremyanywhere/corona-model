@@ -128,14 +128,19 @@ var Region = /** @class */ (function () {
                 // any people in the next gen. 
                 couldntMove++;
                 var nm = v.getNextMove();
-                if (!v.died
-                    && !this.people.has(this.xyToIndex(nm.x, nm.y))
-                    && !nextGen.has(this.xyToIndex(nm.x, nm.y))) {
-                    //this.logVector("before", v)
-                    v.executeMove();
-                    //this.logVector("after", v)
-                    moved++;
-                    couldntMove--;
+                if (!v.died) {
+                    if (!this.people.has(this.xyToIndex(nm.x, nm.y))
+                        && !nextGen.has(this.xyToIndex(nm.x, nm.y))) {
+                        //this.logVector("before", v)
+                        v.executeMove();
+                        //this.logVector("after", v)
+                        moved++;
+                        couldntMove--;
+                    }
+                    else {
+                        // we couldn't move so we force a random direction change. 
+                        v.changeDirection();
+                    }
                 }
                 nextGen.set(v.hash(), v);
                 //console.log("nextGen size is " + nextGen.size)
@@ -244,7 +249,7 @@ var VirusVector = /** @class */ (function () {
     VirusVector.prototype.getNextMove = function () {
         var xd = (this.x + this.direction.x + this.width) % this.width;
         var yd = (this.y + this.direction.y + this.height) % this.height;
-        this.changeDirection();
+        this.randomWalk();
         return { x: xd, y: yd };
     };
     // actually makes the move
@@ -256,10 +261,13 @@ var VirusVector = /** @class */ (function () {
         this.x = mv.x;
         this.y = mv.y;
     };
-    // change direction randomly according to random walk rules. 
-    VirusVector.prototype.changeDirection = function () {
+    VirusVector.prototype.randomWalk = function () {
         if (Math.random() > this.drunkness)
             return;
+        this.changeDirection();
+    };
+    // change direction randomly according to random walk rules. 
+    VirusVector.prototype.changeDirection = function () {
         this.direction.x = 0;
         this.direction.y = 0;
         // might both be zero
