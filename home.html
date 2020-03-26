@@ -3,39 +3,17 @@
 
 <head>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="./material.min .css">
+    <link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.4/material.min.css">
+    <script defer src="https://storage.googleapis.com/code.getmdl.io/1.0.4/material.min.js"></script> 
     
-    <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-    <link rel="stylesheet" href="./getmdl-select.min.css">
-    <script src="./getmdl-select.min.js"></script>
-
-    
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        .column {
-        float: left;
-        padding: 10px;
-        }
-        .sidebar {
-            width: 25%;
-        }
-        .content {
-            width: 75%;
-        }
-    </style>
-        
+    <link rel="stylesheet" href="./node_modules/getmdl-select/getmdl-select.min.css">
+    <script defer src="./node_modules/getmdl-select/getmdl-select.min.js"></script>
 </head>
 
 <body>
 
+
 <!-- Simple Textfield -->
-
-
-
-    
 
     <script src="./src/vector.js"></script>
 
@@ -43,10 +21,10 @@
 
         function start() {
             var p = document.getElementById("population").value;
-            var pl1p = ""
             var movement = document.getElementById("mvm").value;
-            var pl2p = ""
-            new Canvas(p, movement).start();
+            var preventClumping = document.getElementById("clumping").checked;
+            console.log("Why is this thing " + preventClumping)
+            new Canvas(p, movement,preventClumping).start();
         }
     </script>
     <div class = "column sidebar">
@@ -72,9 +50,16 @@
                 <li class="mdl-menu__item" data-val="9">9</li>
             </ul>
         </div>
+        <div class="mdl-textfield"> Disable Clumping</div>
+        <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="clumping">
+            <span class="mdl-switch__label"> </span>
+            <input type="checkbox" id="clumping" class="mdl-switch__input">
+          </label>
+          <p>
         <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" onClick="start()">
             Start Simulation
         </button>
+        </p>
 
     </div>
     <div class = "column content">
@@ -86,6 +71,24 @@
         <script src="./src/vector.js"></script>
         </p>
     </div>
+
+ 
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        .column {
+        float: left;
+        padding: 10px;
+        }
+        .sidebar {
+            width: 25%;
+        }
+        .content {
+            width: 75%;
+        }
+    </style>
 
 </body>
 
