@@ -61,6 +61,8 @@ var Region = /** @class */ (function () {
             }
             if (p == 0) {
                 vv.infectedDays = 1;
+                vv.infected = true;
+                this.infected++;
             }
             this.people.set(h, vv);
         }
@@ -87,27 +89,28 @@ var Region = /** @class */ (function () {
                     nextGen.set(v.hash(), v);
                     continue;
                 }
-                // after 1 infected day we can infect others
-                // TODO an infect neighbours method which uses a parameter for infection rate. 
-                if (v.infectedDays > 1) {
-                    // get neighbours and infect n of them.
-                    this.infectNeighbours(v);
+                // if we are infected then we can infect others, and must count the days. 
+                if (v.infected) {
+                    // after 1 infected day we can infect others
+                    if (v.infectedDays > 1) {
+                        // get neighbours and infect n of them.
+                        this.infectNeighbours(v);
+                    }
                     if (this.movements % 12 == 0) {
                         v.infectedDays++;
                     }
-                }
-                // if we are infected, increment the days
-                // if we make it to 25 days.. we recover
-                if (v.infectedDays > v.durationOfDisease) {
-                    v.infectedDays = 0;
-                    v.infected = false;
-                    if (v.willDie) {
-                        v.died = true;
-                    }
-                    else {
-                        v.recovered = true;
-                        this.infected--;
-                        this.recovered++;
+                    // if we make it to our disease duration we recover or die
+                    if (v.infectedDays > v.durationOfDisease) {
+                        v.infectedDays = 0;
+                        v.infected = false;
+                        if (v.willDie) {
+                            v.died = true;
+                        }
+                        else {
+                            v.recovered = true;
+                            this.infected--;
+                            this.recovered++;
+                        }
                     }
                 }
                 // now move in the "drunken" direction if can (and if not dead)
@@ -281,6 +284,7 @@ var VirusVector = /** @class */ (function () {
         this.willDie = Math.random() * 100 < params.mortalityRate;
         // when we reach this duration, we either die or recover depending on willdie
         this.durationOfDisease = Math.floor(7 + Math.random() * 14);
+        this.walkFactor = Math.pow(2, 8);
     }
     /// gets an x and y coord e.g. using the direction + width of grid. 
     // (0,-1) or (1,1) allows to test if there is something else at that point. 
@@ -300,7 +304,7 @@ var VirusVector = /** @class */ (function () {
     };
     // changes direction based on a random value. 
     VirusVector.prototype.randomWalk = function () {
-        if (Math.round(Math.random() * 10) < params.movement)
+        if (Math.random() * 100 > params.movement)
             return;
         this.changeDirection();
     };
@@ -326,7 +330,6 @@ var VirusVector = /** @class */ (function () {
 var Canvas = /** @class */ (function () {
     function Canvas() {
         this.SCALE = 5;
-        this.delay = 500;
         this.timeStamp = 0;
         console.log("Constructing..");
         this.x = 0;
@@ -343,7 +346,7 @@ var Canvas = /** @class */ (function () {
     Canvas.prototype.watchdog = function () {
         // annoyingly we need this because the "requestAnimationFrame" method fails from
         //time to time. 
-        if (this.terminate) {
+        if (params.reset) {
             clearInterval(this.intervalWatchdog);
         }
         if (this.region.days >= this.checkDays) {
@@ -355,26 +358,38 @@ var Canvas = /** @class */ (function () {
         this.redraw();
     };
     Canvas.prototype.clear = function () {
-        if (this.region != null) {
-            this.terminate = true;
-        }
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     };
     Canvas.prototype.start = function () {
         //must garbage collect the old one. 
+        this.dumpParams();
         this.region = new Region(this.canvas.width, this.canvas.height, this.SCALE);
         this.redraw();
-        this.intervalWatchdog = setInterval(this.watchdog.bind(this), this.delay);
+        this.intervalWatchdog = setInterval(this.watchdog.bind(this), params.speed);
+    };
+    Canvas.prototype.dumpParams = function () {
+        console.log("Parameters are:");
+        console.log("speed " + params.speed);
+        console.log("reset " + params.reset);
+        console.log("preventClumping " + params.preventClumping);
+        console.log("contagionRate " + params.contagionRate);
+        console.log("mortalityRate " + params.mortalityRate);
+        console.log("movement " + params.movement);
     };
     Canvas.prototype.redraw = function () {
         //console.log("redraw..")
         var now = Date.now();
-        if (now - this.timeStamp > this.delay) {
+        if (now - this.timeStamp > params.speed) {
             this.timeStamp = now;
             this.region.drawGridOnCanvasContext(this.context);
             this.region.movePeople();
         }
-        window.requestAnimationFrame(this.redraw.bind(this));
+        if (!params.reset) {
+            window.requestAnimationFrame(this.redraw.bind(this));
+        }
+        else {
+            this.clear();
+        }
     };
     return Canvas;
 }());

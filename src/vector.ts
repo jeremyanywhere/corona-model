@@ -10,6 +10,8 @@ class Params {
     public preventClumping:boolean
     public mortalityRate: number
     public contagionRate: number
+    public reset: boolean
+    public speed: number
 }
  let params = new Params()
 
@@ -69,6 +71,8 @@ class Region {
              }
              if (p==0) {
                 vv.infectedDays = 1
+                vv.infected = true
+                this.infected++
              }   
             this.people.set(h,vv)
         }
@@ -93,29 +97,32 @@ class Region {
                 nextGen.set(v.hash(),v)
                 continue
             }
-            // after 1 infected day we can infect others
-            // TODO an infect neighbours method which uses a parameter for infection rate. 
-            if (v.infectedDays > 1) {
-                // get neighbours and infect n of them.
-                this.infectNeighbours(v)
+            
+            // if we are infected then we can infect others, and must count the days. 
+            if (v.infected) {
+                // after 1 infected day we can infect others
+                if (v.infectedDays > 1) {
+                    // get neighbours and infect n of them.
+                    this.infectNeighbours(v)
+
+                }
                 if(this.movements%12==0) {
                     v.infectedDays++
                 }
-            }
-            // if we are infected, increment the days
-            // if we make it to 25 days.. we recover
-            if(v.infectedDays > v.durationOfDisease) {
-                v.infectedDays = 0
-                v.infected = false
-                if(v.willDie) {
-                    v.died = true
-                } else {
-                    v.recovered = true
-                    this.infected--
-                    this.recovered++
-                }
+                // if we make it to our disease duration we recover or die
+                if(v.infectedDays > v.durationOfDisease) {
+                    v.infectedDays = 0
+                    v.infected = false
+                    if(v.willDie) {
+                        v.died = true
+                    } else {
+                        v.recovered = true
+                        this.infected--
+                        this.recovered++
+                    }
 
-            }
+                }
+            }   
            
             // now move in the "drunken" direction if can (and if not dead)
             // we check our current map and the new one, we don't want to clobber
@@ -232,7 +239,6 @@ class Region {
 
 /// keeps going in the same direction with a low probability of changing (drunken walk)
 class VirusVector {
-
     infected: boolean
     infectedDays: number
     // prevents re-infection. 
@@ -251,6 +257,7 @@ class VirusVector {
     maxNeighboursCanInfect: number 
     infectees: number
     durationOfDisease: number // we calculate up front to make life easier. 
+    walkFactor: number // make social distancing / random walk parameters exponential
     constructor(x:number, y:number, width:number, height:number) {
         this.x = x
         this.y = y
@@ -270,6 +277,7 @@ class VirusVector {
         this.willDie = Math.random()*100<params.mortalityRate
         // when we reach this duration, we either die or recover depending on willdie
         this.durationOfDisease = Math.floor( 7+Math.random()*14) 
+        this.walkFactor = 2**8
     }
 
    /// gets an x and y coord e.g. using the direction + width of grid. 
@@ -291,7 +299,7 @@ class VirusVector {
     }
     // changes direction based on a random value. 
     randomWalk() {
-        if (Math.round(Math.random()*10) < params.movement)
+        if (Math.random()*100 > params.movement) 
             return
         this.changeDirection()
     }
@@ -323,11 +331,9 @@ class Canvas {
     private checkDays: number 
     private x: number;
     private scale: number;
-    private delay: number = 500;
     private timeStamp: number = 0;
     private populationSize: number
     private movement: number
-    private terminate: boolean
     private intervalWatchdog: any
 
 
@@ -348,7 +354,7 @@ class Canvas {
     private watchdog() {
         // annoyingly we need this because the "requestAnimationFrame" method fails from
         //time to time. 
-        if(this.terminate) {
+        if(params.reset) {
             clearInterval(this.intervalWatchdog)
         }
         if (this.region.days >= this.checkDays) {
@@ -360,27 +366,38 @@ class Canvas {
         this.redraw()
     }
     clear() {
-        if (this.region!= null) {
-            this.terminate = true
-        }
         this.context.clearRect(0,0,this.canvas.width, this.canvas.height)
     }
     start() {
         //must garbage collect the old one. 
+        this.dumpParams()
         this.region = new Region(this.canvas.width, this.canvas.height, this.SCALE)
         this.redraw()
-        this.intervalWatchdog = setInterval(this.watchdog.bind(this), this.delay);
+        this.intervalWatchdog = setInterval(this.watchdog.bind(this), params.speed);
+    }
+    dumpParams() {
+        console.log("Parameters are:")
+            console.log("speed " + params.speed)
+            console.log("reset " + params.reset)
+            console.log("preventClumping " + params.preventClumping)
+            console.log("contagionRate " + params.contagionRate)
+            console.log("mortalityRate " + params.mortalityRate)
+            console.log("movement " + params.movement)
     }
 
     private redraw() {
         //console.log("redraw..")
         let now = Date.now();
-        if (now-this.timeStamp > this.delay) {
+        if (now-this.timeStamp > params.speed) {
             this.timeStamp = now;
             this.region.drawGridOnCanvasContext(this.context);
             this.region.movePeople();
         }
-        window.requestAnimationFrame(this.redraw.bind(this));
+        if (!params.reset) {
+            window.requestAnimationFrame(this.redraw.bind(this));
+        } else {
+            this.clear()
+        }
     }
     
 }
