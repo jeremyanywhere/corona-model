@@ -1,31 +1,36 @@
-
+//k2N4/3N4/1P1N4/1P1N4/1P1N4/1P1N4/1P1N4/7K w - - 0 1
 /// basically a grid, which has a population of vectors.. who could have 
 
 //import { timingSafeEqual } from "crypto";
 
 // for purposes of this code. A Vector is a carrier of a virus, not a data structure
+class Params {
+    public population: number
+    public movement:number
+    public preventClumping:boolean
+    public mortalityRate: number
+    public contagionRate: number
+}
+ let params = new Params()
+
 class Region {
     people: Map<number,VirusVector>;
     width: number
     height: number
-    scale: number
-    population: number
-    movement:number
     days: number
     movements: number
     deaths: number
     infected:number
     recovered:number
     counter:number
+    params:Params
+    scale:number
 
-    constructor(population: number, movement:number, x: number, y: number, scale: number) {
-        console.log("constructing population.. " + x + "," + y + "scale:" + scale)
-        
-        this.scale = scale;
-        this.population = population
-        this.movement = movement
-        this.width = Math.floor(x/scale);
-        this.height = Math.floor(y/scale);
+    constructor(width: number, height: number, scale: number) {
+        console.log("constructing population.. " +width + "," + height + "scale:" +scale)
+        this.scale = scale
+        this.width = Math.floor(width/scale);
+        this.height = Math.floor(height/scale);
         this.people = new Map<number,VirusVector>()
         this.createVectors()
         this.days=0
@@ -34,9 +39,8 @@ class Region {
         this.movements = 0 // 12 to a day. 
         this.infected = 0
         this.recovered = 0
-        console.log("population movement with "+ this.movement)
-        
-        
+
+        console.log("population movement with "+ params.movement)
     }
     xyToIndex(x: number, y: number) {
         return y * this.width + x
@@ -44,16 +48,14 @@ class Region {
     indexToXY(i: number) {
         return {x: i%this.width, y: Math.floor(i/this.width)}
     }
-
-
     logVector(t:string, v:VirusVector) {
         console.log(t+" V - (x,y) - ("+v.x+","+v.y+")")
     }
     createVectors() {
-        for (let p=0;p<this.population;p++) {
+        for (let p=0;p<params.population;p++) {
             let x = Math.floor(Math.random() * this.width)
             let y = Math.floor(Math.random() * this.height)
-            let vv = new VirusVector(this.movement, x,y,this.width, this.height)
+            let vv = new VirusVector(x,y,this.width, this.height)
             let h = vv.hash()
             // if random position is taken, just scoot along in linear fashion to find a spot. 
             if (this.people.has(h)) {
@@ -62,7 +64,7 @@ class Region {
                     nxt = nxt+1%(this.width*this.height)
                 }
                 let n = this.indexToXY(nxt)
-                vv = new VirusVector(this.movement, n.x,n.y,this.width, this.height)
+                vv = new VirusVector(n.x,n.y,this.width, this.height)
                 h = nxt
              }
              if (p==0) {
@@ -78,76 +80,70 @@ class Region {
     // moves all people if they can move in the direction they are going
     // their direction changes by drunken sailor rules.
     //  
-    advanceDay2() {
-        return
-    }
     movePeople() {
         this.movements++
-        if (this.movements > 11) {
-            this.movements = 0
-            this.days++
-        }
+        this.days = Math.floor(this.movements / 12)
         let spread = 1
         let moved = 0
         let couldntMove = 0
         var nextGen = new Map<number,VirusVector>()
         
         for (let v of this.people.values()) {
+            if (v.died) {
+                nextGen.set(v.hash(),v)
+                continue
+            }
             // after 1 infected day we can infect others
+            // TODO an infect neighbours method which uses a parameter for infection rate. 
             if (v.infectedDays > 1) {
                 // get neighbours and infect n of them.
-                let spread = 0
-                for (let x = -1; x < 2; x ++) {
-                    for (let y = -1; y < 3; y++) {
-                        if ((x!=0 || y!=0) && spread < 1) {
-                            let h = this.xyToIndex((x+v.x+v.width)%v.width, (y+v.y+v.height)%v.height)
-                            if (this.people.has(h)) {
-                                spread++
-                                let neighb = this.people.get(h)
-                                if (neighb.infectedDays < 1 && !neighb.recovered) {
-                                    neighb.infectedDays = 1
-                                    this.infected++
-                                }
-                            }
-                        }
-                    }
-                }
-                // chance of dying every day adds up to about 1.4% chance. 
-                if (Math.random() < 0.000664) {
-                    v.died = true  
-                    this.deaths++
-                    //console.log("aaaaaaaarrrrrgggghhh - " + this.deaths)
+                this.infectNeighbours(v)
+                if(this.movements%12==0) {
+                    v.infectedDays++
                 }
             }
             // if we are infected, increment the days
-            // if we make it to 20.. we recover
-            if (!v.died && v.infectedDays>0) {
-                if( v.infectedDays < 80) {
-                    v.infectedDays++
+            // if we make it to 25 days.. we recover
+            if(v.infectedDays > v.durationOfDisease) {
+                v.infectedDays = 0
+                v.infected = false
+                if(v.willDie) {
+                    v.died = true
                 } else {
-                    v.infectedDays = 0
                     v.recovered = true
                     this.infected--
                     this.recovered++
                 }
+
             }
            
-            // now move in the "drunken" direction if can and if not dead
+            // now move in the "drunken" direction if can (and if not dead)
             // we check our current map and the new one, we don't want to clobber
             // any people in the next gen. 
-            couldntMove++
-            let nm = v.getNextMove()
-            if (!v.died
-                && !this.people.has(this.xyToIndex(nm.x, nm.y))
+            if (!v.died) {
+                let nm = v.getNextMove()
+                if(!this.people.has(this.xyToIndex(nm.x, nm.y))
                 && !nextGen.has(this.xyToIndex(nm.x, nm.y))) {
-                //this.logVector("before", v)
-                v.executeMove()
-                //this.logVector("after", v)
-                moved++
-                couldntMove--
+                    v.executeMove()
+                    // now give it the chance to change direction next time. 
+                    v.randomWalk()
+                    moved++
+                } else {
+                    // if we can't move and we don't force a direction change
+                    // then we get "clumping". 
+                    // we always reduce clumping by some factor. 
+                    
+                    if (params.preventClumping) {
+                        v.changeDirection()
+                    } else if (Math.random()<0.25) {
+                        v.changeDirection()
+                    }
+                }
             }
             nextGen.set(v.hash(),v)
-            //console.log("nextGen size is " + nextGen.size)
+        }
+        if (this.people.size != nextGen.size) {
+            console.log("Man Overboard.. "+(this.people.size - nextGen.size) )
         }
         this.people = nextGen
         this.counter++
@@ -155,26 +151,48 @@ class Region {
             this.counter = 0
         }
     }
+    infectNeighbours(v:VirusVector) {
+        for (let x = -1; x < 2; x ++) {
+            for (let y = -1; y < 3; y++) {
+                if ((x!=0 || y!=0)) {
+                    let h = this.xyToIndex((x+v.x+v.width)%v.width, (y+v.y+v.height)%v.height)
+                    if (this.people.has(h)) {
+                        let neighb = this.people.get(h)
+                        if (!neighb.infected && !neighb.recovered && !neighb.died &&(v.infectees<v.maxNeighboursCanInfect)) {
+                            //random 50% chance of affecting a particular neighbour, but only to the maximum
+                            // as dictated by the infection rate
+                            neighb.infected = true
+                            neighb.infectedDays = 0
+                            v.infectees++
+                            this.infected++ 
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     drawGridOnCanvasContext(ctxt: CanvasRenderingContext2D) {
-        ctxt.fillStyle = "#000000"
-        let color = ''
+        let tote = 0
+        ctxt.fillStyle = "#00ffff"
+        let color = "#00ffff"
         for(let v of this.people.values()) {
             color = '#0000ff' // blue
-            if (v.infectedDays > 0) color = '#ff0000' // red
-            if (v.recovered) color = '#22AA22' // green
-            if (v.died) color = '#222222' //black/gray
-            ctxt.fillStyle = color;
+            if (v.infectedDays > 0) color = "#ff0000" // red
+            if (v.recovered) color = "#22AA22" // green
+            if (v.died) color = "#9933FF" 
+            ctxt.fillStyle = color
             if (v.oldX != v.x || v.oldY != v.y) {
                 ctxt.clearRect(v.oldX*this.scale,v.oldY*this.scale,this.scale,this.scale)
             }
-            ctxt.fillRect(v.x*this.scale, v.y*this.scale,this.scale, this.scale);
+            ctxt.fillRect(v.x*this.scale, v.y*this.scale,this.scale, this.scale)
             //console.log("x and y are "+v.x+","+v.y)
         }
+        this.testIdxConversion()
         // dashboard
         
         var border = 2
-        var text = ["Population:" + this.population,
+        var text = ["Population:" + params.population,
                     "Days:" + this.days, 
                     "Infected: "+ this.infected,
                     "Deaths:"+this.deaths,
@@ -200,12 +218,13 @@ class Region {
         }
     }
 
-
-    dumpGrid() {
-
-    }
     testIdxConversion() {
-
+        for(let k of this.people.keys()) {
+            let v = this.people.get(k)
+            if (k!=v.hash()) {
+                console.log("oh dear, hash doesn't match .. " + k + " " + v.hash())
+            }
+        }
     }
      
 
@@ -214,9 +233,7 @@ class Region {
 /// keeps going in the same direction with a low probability of changing (drunken walk)
 class VirusVector {
 
-    // infected randomly by proximity (neighbouring cell) with infection probability defined by 
-    // WHO reports.  
-    drunkness: number
+    infected: boolean
     infectedDays: number
     // prevents re-infection. 
     recovered: boolean
@@ -229,8 +246,12 @@ class VirusVector {
     y: number
     oldX: number
     oldY: number
+    willDie:boolean
     direction: {x:number, y:number}
-    constructor(drunkness:number, x:number, y:number, width:number, height:number) {
+    maxNeighboursCanInfect: number 
+    infectees: number
+    durationOfDisease: number // we calculate up front to make life easier. 
+    constructor(x:number, y:number, width:number, height:number) {
         this.x = x
         this.y = y
         this.width = width
@@ -241,7 +262,14 @@ class VirusVector {
         this.direction = {x:0, y:0}
         this.direction.x = Math.floor(Math.random() * 3)-1
         this.direction.y = Math.floor(Math.random() * 3)-1
-        this.drunkness = drunkness
+        this.infected = false
+        this.infectees = 0
+        // turn a real no. into a random int with the same probabilistic outcome. 
+        let n = params.contagionRate
+        this.maxNeighboursCanInfect = Math.floor(n) + ((Math.random()<(n-Math.floor(n)))?1:0)
+        this.willDie = Math.random()*100<params.mortalityRate
+        // when we reach this duration, we either die or recover depending on willdie
+        this.durationOfDisease = Math.floor( 7+Math.random()*14) 
     }
 
    /// gets an x and y coord e.g. using the direction + width of grid. 
@@ -250,7 +278,6 @@ class VirusVector {
     getNextMove() {
         let xd = (this.x + this.direction.x + this.width)%this.width
         let yd = (this.y + this.direction.y+this.height)%this.height
-        this.changeDirection()
         return {x:xd, y:yd}
     }
     // actually makes the move
@@ -261,15 +288,23 @@ class VirusVector {
         this.oldY = this.y
         this.x = mv.x
         this.y = mv.y
-   }
-    // change direction randomly according to random walk rules. 
-    private changeDirection() {
-        if (Math.random() > this.drunkness)
+    }
+    // changes direction based on a random value. 
+    randomWalk() {
+        if (Math.round(Math.random()*10) < params.movement)
             return
+        this.changeDirection()
+    }
+    // change the direction vector randomly 
+    changeDirection() {
         this.direction.x = 0; this.direction.y = 0
         // might both be zero
         this.direction.x = Math.floor(Math.random() * 3)-1
         this.direction.y = Math.floor(Math.random() * 3)-1
+        // for debugging purposes. Let's remove 0 directions.
+        if (this.direction.x ==0 && this.direction.y == 0) {
+            this.direction.x = 1
+        }
     }
     //use the hash to store in a set for quicker calculation.
     hash() {
@@ -280,8 +315,8 @@ class VirusVector {
 
 // abstraction of our canvas element. 
 class Canvas {
+    SCALE = 5
     private canvas: HTMLCanvasElement;
-
     private context: CanvasRenderingContext2D;
     private paint: boolean;
     private region: Region;
@@ -292,11 +327,14 @@ class Canvas {
     private timeStamp: number = 0;
     private populationSize: number
     private movement: number
+    private terminate: boolean
+    private intervalWatchdog: any
 
-    constructor(population: number, movement: number) {
+
+    constructor() {
         console.log("Constructing..")
         this.x = 0
-        this.populationSize = population
+        this.populationSize = params.population
         this.checkDays = -1
         this.canvas = document.getElementById('canvas') as
                  HTMLCanvasElement;
@@ -305,11 +343,14 @@ class Canvas {
         console.log(`context = ${this.context}`)
         this.context.lineWidth = 1;
         this.scale = 5;
-        this.movement = movement
+        this.movement = params.movement
     }
     private watchdog() {
         // annoyingly we need this because the "requestAnimationFrame" method fails from
         //time to time. 
+        if(this.terminate) {
+            clearInterval(this.intervalWatchdog)
+        }
         if (this.region.days >= this.checkDays) {
             this.checkDays ++
             return
@@ -318,12 +359,17 @@ class Canvas {
         this.checkDays = this.region.days -1
         this.redraw()
     }
+    clear() {
+        if (this.region!= null) {
+            this.terminate = true
+        }
+        this.context.clearRect(0,0,this.canvas.width, this.canvas.height)
+    }
     start() {
         //must garbage collect the old one. 
-        console.log("Starting..")
-        this.region = new Region(this.populationSize, this.movement,  this.canvas.width, this.canvas.height, this.scale)
+        this.region = new Region(this.canvas.width, this.canvas.height, this.SCALE)
         this.redraw()
-        setInterval(this.watchdog.bind(this), this.delay);
+        this.intervalWatchdog = setInterval(this.watchdog.bind(this), this.delay);
     }
 
     private redraw() {
