@@ -105,10 +105,10 @@ var Region = /** @class */ (function () {
                         v.infected = false;
                         if (v.willDie) {
                             v.died = true;
+                            this.deaths++;
                         }
                         else {
                             v.recovered = true;
-                            this.infected--;
                             this.recovered++;
                         }
                     }
@@ -132,7 +132,7 @@ var Region = /** @class */ (function () {
                         if (params.preventClumping) {
                             v.changeDirection();
                         }
-                        else if (Math.random() < 0.25) {
+                        else if (Math.random() < 0.1) {
                             v.changeDirection();
                         }
                     }
@@ -185,17 +185,22 @@ var Region = /** @class */ (function () {
             for (var _c = __values(this.people.values()), _d = _c.next(); !_d.done; _d = _c.next()) {
                 var v = _d.value;
                 color = '#0000ff'; // blue
-                if (v.infectedDays > 0)
+                if (v.infected)
                     color = "#ff0000"; // red
                 if (v.recovered)
                     color = "#22AA22"; // green
                 if (v.died)
-                    color = "#9933FF";
+                    color = "#AA00AA";
                 ctxt.fillStyle = color;
-                if (v.oldX != v.x || v.oldY != v.y) {
+                if (v.oldX != v.x || v.oldY != v.y && !this.people.has(this.xyToIndex(v.oldX, v.oldY))) {
                     ctxt.clearRect(v.oldX * this.scale, v.oldY * this.scale, this.scale, this.scale);
                 }
-                ctxt.fillRect(v.x * this.scale, v.y * this.scale, this.scale, this.scale);
+                if (v.died) {
+                    ctxt.fillRect(v.x * this.scale - 1, v.y * this.scale - 1, this.scale + 2, this.scale + 2);
+                }
+                else {
+                    ctxt.fillRect(v.x * this.scale, v.y * this.scale, this.scale, this.scale);
+                }
                 //console.log("x and y are "+v.x+","+v.y)
             }
         }
@@ -281,9 +286,14 @@ var VirusVector = /** @class */ (function () {
         // turn a real no. into a random int with the same probabilistic outcome. 
         var n = params.contagionRate;
         this.maxNeighboursCanInfect = Math.floor(n) + ((Math.random() < (n - Math.floor(n))) ? 1 : 0);
-        this.willDie = Math.random() * 100 < params.mortalityRate;
         // when we reach this duration, we either die or recover depending on willdie
         this.durationOfDisease = Math.floor(7 + Math.random() * 14);
+        this.willDie = (Math.random() * 100 < params.mortalityRate);
+        if (this.willDie) {
+            // on average deaths will occur in shorter time frame than recovery. 
+            this.durationOfDisease = Math.floor(this.durationOfDisease / 2);
+            //console.log("you, buddy, have this no. of days to live.. "+ this.durationOfDisease)
+        }
         this.walkFactor = Math.pow(2, 8);
     }
     /// gets an x and y coord e.g. using the direction + width of grid. 

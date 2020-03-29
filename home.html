@@ -40,21 +40,21 @@
         </div>
             <div class="mdl-textfield " id="contagionlabel">
             Contagion Factor (R0) 
-            <input class="mdl-textfield__input" type="text" id="contagion" value="1.5">
+            <input class="mdl-textfield__input" type="text" id="contagion" value="2.0">
         </div>
         <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="contagionlabel" >
-            R0 is how many people on average are infected by one carrier. Less than 1 means a virus will die out. More than 1 causes a spread. Corona is between 2 and 3 at the moment hence the pandemic.        </div>
+            R0 is how many people on average are infected by one carrier. Less than 1 means a virus will die out. More than 1 causes a spread. Corona is between 2 and 3 at the moment hence the pandemic. Infections are shown by red dots.       </div>
         <div class="mdl-textfield " id="mortalitylabel">
             Mortality Rate %  
-            <input class="mdl-textfield__input" type="text" id="mortality" value="4">
+            <input class="mdl-textfield__input" type="text" id="mortality" value="6">
         </div>
         <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="mortalitylabel" >
-            Mortality Rate is the percentage of infected people who die. Current figures for Corona Virus are between 4% and 10% depending on region
+            Mortality Rate is the percentage of infected people who die. Current figures for Corona Virus are between 4% and 10% depending on region. Recovered people are shown by green dots. Deaths by larger, purple dots.
         </div>
 
         <p>
         <div class="mdl-textfield mdl-js-textfield getmdl-select">
-            <div id="mvm_label">Social Distancing</div>
+            <div id="mvm_label">Social Distancing %</div>
             <input type="text" value="" class="mdl-textfield__input" id="mvm" readonly>
             <input type="hidden" value="" name="mvm_val">
             <i class="mdl-icon-toggle__label material-icons">keyboard_arrow_down</i>
@@ -74,7 +74,8 @@
         <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="mvm_label" >
             Social Distancing affects the travel distance of each person. 
                 For higher values, they move in a smaller, more confined way and collide with 
-                each other less, hence spreading the virus less. 
+                each other less, hence spreading the virus less. For lower values they will
+                meet more other people and infect them but always according to contagion factor.  
         </div>
         </p>
         <div class="mdl-textfield" id="clumplabel"> Disable Clumping</div>
