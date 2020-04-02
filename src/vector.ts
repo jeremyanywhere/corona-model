@@ -4,6 +4,16 @@
 //import { timingSafeEqual } from "crypto";
 
 // for purposes of this code. A Vector is a carrier of a virus, not a data structure
+
+function normalDist(range: number): number  {
+    let u = 0, v = 0;
+    while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
+    while(v === 0) v = Math.random();
+    let num = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+    num = num / 10.0 + 0.5; // Translate to 0 -> 1
+    if (num > 1 || num < 0) return normalDist(range); // resample between 0 and 1
+    return num * range * 2;
+}
 class Params {
     public population: number
     public movement:number
@@ -12,6 +22,9 @@ class Params {
     public contagionRate: number
     public reset: boolean
     public speed: number
+    public simulationLength: number
+    public avgTimeToDeath: number
+    public avgTimeToRecovery: number
 }
  let params = new Params()
 
@@ -31,8 +44,8 @@ class Region {
     constructor(width: number, height: number, scale: number) {
         console.log("constructing population.. " +width + "," + height + "scale:" +scale)
         this.scale = scale
-        this.width = Math.floor(width/scale);
-        this.height = Math.floor(height/scale);
+        this.width = Math.floor(width);
+        this.height = Math.floor(height);
         this.people = new Map<number,VirusVector>()
         this.createVectors()
         this.days=0
@@ -41,8 +54,6 @@ class Region {
         this.movements = 0 // 12 to a day. 
         this.infected = 0
         this.recovered = 0
-
-        console.log("population movement with "+ params.movement)
     }
     xyToIndex(x: number, y: number) {
         return y * this.width + x
@@ -57,7 +68,7 @@ class Region {
         for (let p=0;p<params.population;p++) {
             let x = Math.floor(Math.random() * this.width)
             let y = Math.floor(Math.random() * this.height)
-            let vv = new VirusVector(x,y,this.width, this.height)
+            let vv = new VirusVector("vv"+p, x,y,this.width, this.height)
             let h = vv.hash()
             // if random position is taken, just scoot along in linear fashion to find a spot. 
             if (this.people.has(h)) {
@@ -66,15 +77,32 @@ class Region {
                     nxt = nxt+1%(this.width*this.height)
                 }
                 let n = this.indexToXY(nxt)
-                vv = new VirusVector(n.x,n.y,this.width, this.height)
+                //vv = new VirusVector(n.x,n.y,this.width, this.height) - is this necessary? why not change indices..
+                vv.x = n.x; vv.y = n.y
                 h = nxt
-             }
-             if (p==0) {
+            }
+            if (p==0) {
                 vv.infectedDays = 1
                 vv.infected = true
                 this.infected++
-             }   
+            }   
             this.people.set(h,vv)
+            //console.log("created VVector at "+ vv.x + "," + vv.y)
+        }
+        this.createSVGElements()
+    }
+    createSVGElements() {
+        var svgi = document.getElementById('svgId')
+        var circ 
+        for (let v of this.people.values()) {
+            circ = document.createElementNS("http://www.w3.org/2000/svg","circle");
+            circ.id = v.id
+            circ.setAttribute("cx", ""+v.x)
+            circ.setAttribute("cy", ""+v.y)
+            circ.setAttribute('r',"0.3")
+            circ.setAttribute("style","fill:blue;stroke-width:0")
+            svgi.appendChild(circ)
+            v.svgElement = circ
         }
     }
     // first spreads infection to anyone in proximity if infectedDays bigger than 1 day.
@@ -199,7 +227,7 @@ class Region {
             }
             //console.log("x and y are "+v.x+","+v.y)
         }
-        this.testIdxConversion()
+        //this.testIdxConversion()
         // dashboard
         
         var border = 2
@@ -228,7 +256,26 @@ class Region {
             ctxt.fillText(text[pos], dashX, dashY+textH*(pos+1))
         }
     }
+    renderGridInSVG(svg: HTMLElement) {
+        var circ 
+        var color
+        //var vv: VirusVector
+        //console.log("Children of DUNE (svg) "+svg.childElementCount)
 
+        for(let v of this.people.values()) {
+            //console.log("looking for circle in vector - "+v.id+ " "+ v.svgElement)
+            circ = v.svgElement
+            circ.setAttribute('cx',""+v.x)
+            circ.setAttribute('cy',""+v.y) 
+            color = "#2222FF" // blue
+            if (v.infected) color = "#FF0000" // red
+            //if (v.recovered) console.log("Oh yes.. I have Recovered!")
+            if (v.recovered) color = "#22AA22" // green
+            if (v.died) color = "#AA00AA" 
+            circ.setAttribute("style",("fill:"+color+";stroke-width:0"))
+        }
+
+    }
     testIdxConversion() {
         for(let k of this.people.keys()) {
             let v = this.people.get(k)
@@ -243,6 +290,8 @@ class Region {
 
 /// keeps going in the same direction with a low probability of changing (drunken walk)
 class VirusVector {
+    id: string
+    svgElement: SVGElement
     infected: boolean
     infectedDays: number
     // prevents re-infection. 
@@ -262,7 +311,8 @@ class VirusVector {
     infectees: number
     durationOfDisease: number // we calculate up front to make life easier. 
     walkFactor: number // make social distancing / random walk parameters exponential
-    constructor(x:number, y:number, width:number, height:number) {
+    constructor(id:string, x:number, y:number, width:number, height:number) {
+        this.id = id
         this.x = x
         this.y = y
         this.width = width
@@ -275,20 +325,23 @@ class VirusVector {
         this.direction.y = Math.floor(Math.random() * 3)-1
         this.infected = false
         this.infectees = 0
+        
+        let n = normalDist(params.contagionRate)
         // turn a real no. into a random int with the same probabilistic outcome. 
-        let n = params.contagionRate
         this.maxNeighboursCanInfect = Math.floor(n) + ((Math.random()<(n-Math.floor(n)))?1:0)
 
         // when we reach this duration, we either die or recover depending on willdie
-        this.durationOfDisease = Math.floor(7+Math.random()*14) 
         this.willDie = (Math.random()*100 < params.mortalityRate)
         if (this.willDie) {
             // on average deaths will occur in shorter time frame than recovery. 
-            this.durationOfDisease = Math.floor(this.durationOfDisease/2)
-            //console.log("you, buddy, have this no. of days to live.. "+ this.durationOfDisease)
-        }
+            this.durationOfDisease = normalDist(params.avgTimeToDeath)
+        } else {
+            this.durationOfDisease = normalDist(params.avgTimeToRecovery)
+        }     
+        
         this.walkFactor = 2**8
     }
+
 
    /// gets an x and y coord e.g. using the direction + width of grid. 
    // (0,-1) or (1,1) allows to test if there is something else at that point. 
@@ -333,8 +386,9 @@ class VirusVector {
 
 // abstraction of our canvas element. 
 class Canvas {
-    SCALE = 5
+    SCALE = 1
     private canvas: HTMLCanvasElement;
+    private svg: HTMLElement
     private context: CanvasRenderingContext2D;
     private paint: boolean;
     private region: Region;
@@ -352,13 +406,14 @@ class Canvas {
         this.x = 0
         this.populationSize = params.population
         this.checkDays = -1
-        this.canvas = document.getElementById('canvas') as
-                 HTMLCanvasElement;
-        console.log(`canvas =${this.canvas}`)
-        this.context = this.canvas.getContext("2d");
-        console.log(`context = ${this.context}`)
-        this.context.lineWidth = 1;
-        this.scale = 5;
+        //this.canvas = document.getElementById('canvas') as
+        //         HTMLCanvasElement;
+        this.svg = document.getElementById('svgId') as HTMLHtmlElement
+        //console.log(`canvas =${this.canvas}`)
+        //this.context = this.canvas.getContext("2d");
+        //console.log(`context = ${this.context}`)
+        //this.context.lineWidth = 1;
+        this.scale = 1;
         this.movement = params.movement
     }
     private watchdog() {
@@ -376,32 +431,60 @@ class Canvas {
         this.redraw()
     }
     clear() {
-        this.context.clearRect(0,0,this.canvas.width, this.canvas.height)
+        this.context.clearRect(0,0,this.svg.clientWidth, this.svg.clientHeight)
+    }
+    start2() {
+        this.dumpParams()
+        var viewbox = this.svg.getAttributeNS("http://www.w3.org/2000/svg",'viewbox') 
+        console.log("viewbox x is "+viewbox)
+        this.region = new Region(160, 120, this.SCALE)
+        this.redraw2()
+        //this.intervalWatchdog = setInterval(this.watchdog.bind(this), params.speed);
+
     }
     start() {
         //must garbage collect the old one. 
         this.dumpParams()
-        this.region = new Region(this.canvas.width, this.canvas.height, this.SCALE)
+        
+        this.region = new Region(this.canvas.clientWidth, this.canvas.clientHeight, this.SCALE)
         this.redraw()
         this.intervalWatchdog = setInterval(this.watchdog.bind(this), params.speed);
     }
     dumpParams() {
-        console.log("Parameters are:")
-            console.log("speed " + params.speed)
-            console.log("reset " + params.reset)
-            console.log("preventClumping " + params.preventClumping)
-            console.log("contagionRate " + params.contagionRate)
-            console.log("mortalityRate " + params.mortalityRate)
-            console.log("movement " + params.movement)
+        console.log("Parameters are:") 
+        console.log("   speed " + params.speed)
+        console.log("   reset " + params.reset)
+        console.log("   preventClumping " + params.preventClumping)
+        console.log("   contagionRate " + params.contagionRate)
+        console.log("   mortalityRate " + params.mortalityRate)
+        console.log("   movement " + params.movement)
+        console.log("   Length "+ params.simulationLength)
+        console.log("   Time to Death" + params.avgTimeToDeath)
+        console.log("   Time to Recovery"+params.avgTimeToRecovery)
     }
-
+    private redraw2() {
+        //console.log("redraw..")
+        let now = Date.now();
+        if (now-this.timeStamp > params.speed) {
+            this.timeStamp = now;
+            this.region.renderGridInSVG(this.svg);
+            if (this.region.days < params.simulationLength)
+                this.region.movePeople();
+        }
+        if (!params.reset) {
+            window.requestAnimationFrame(this.redraw2.bind(this));
+        } else {
+            this.clear()
+        }
+    }
     private redraw() {
         //console.log("redraw..")
         let now = Date.now();
         if (now-this.timeStamp > params.speed) {
             this.timeStamp = now;
             this.region.drawGridOnCanvasContext(this.context);
-            this.region.movePeople();
+            if (this.region.days < params.simulationLength)
+                this.region.movePeople();
         }
         if (!params.reset) {
             window.requestAnimationFrame(this.redraw.bind(this));
