@@ -274,7 +274,8 @@ class Region {
             if (v.died) color = "#AA00AA" 
             circ.setAttribute("style",("fill:"+color+";stroke-width:0"))
         }
-
+        let dc = document.getElementById("deathcount")
+        dc.innerHTML = ("Deaths: "+this.deaths)
     }
     testIdxConversion() {
         for(let k of this.people.keys()) {

@@ -4,12 +4,20 @@
 <head>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <!--link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.4/material.min.css"-->
-    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-light_blue.min.css" />
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-blue.min.css" />
     <script defer src="https://storage.googleapis.com/code.getmdl.io/1.0.4/material.min.js"></script> 
     
     <link rel="stylesheet" href="node_modules/getmdl-select/getmdl-select.min.css">
     <script defer src="node_modules/getmdl-select/getmdl-select.min.js"></script>
     <script defer src="node_modules/getmdl-select/src/js/getmdl-select.js"></script>
+    <style>
+        button.my-button {
+
+        padding: 200px 200px; 
+        font-size: 13px;
+        line-height: 0px; 
+    }   
+        </style>
 </head>
 <body>
 
@@ -37,17 +45,17 @@
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
         <header class="mdl-layout__header">
             <div class="mdl-layout__header-row">
-                     <!-- Title -->
-            <span class="mdl-layout-title">Title</span>
-            <!-- Add spacer, to align navigation to the right -->
-            <div class="mdl-layout-spacer"></div>
-            <!-- Navigation. We hide it in small screens. -->
-            <nav class="mdl-navigation mdl-layout--large-screen-only">
-                <a class="mdl-navigation__link" href="">Link</a>
-                <a class="mdl-navigation__link" href="">Link</a>
-                <a class="mdl-navigation__link" href="">Link</a>
-                <a class="mdl-navigation__link" href="">Link</a>
-            </nav>
+                <div class="mdl-layout-spacer"></div>
+                <span class="mdl-layout-title" id="deathcount"> Deaths: 100 </span>
+                <div class="mdl-layout-spacer"></div>
+                <span class="mdl-layout-title" id="infectioncount"> Infected: 100 </span>
+                <div class="mdl-layout-spacer"></div>
+                <span class="mdl-layout-title" id="recovered"> Recovered: 100 </span>
+                <div class="mdl-layout-spacer"></div>
+                <span class="mdl-layout-title" id="recovered"> Days: 100 </span>
+                <div class="mdl-layout-spacer"></div>
+                <span class="mdl-layout-title" id="recovered"> Population: 100 </span>
+                <div class="mdl-layout-spacer"></div>
             </div>
         </header>
         <main class="mdl-layout__content">
