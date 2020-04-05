@@ -11,6 +11,7 @@ var __values = (this && this.__values) || function (o) {
     };
 };
 //import { timingSafeEqual } from "crypto";
+//
 // for purposes of this code. A Vector is a carrier of a virus, not a data structure
 function normalDist(range) {
     var u = 0, v = 0;
