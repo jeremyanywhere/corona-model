@@ -29,7 +29,8 @@
             params.reset = false
             params.population = document.getElementById("population").value;
             params.movement = document.getElementById("mvm").value;
-            params.preventClumping = document.getElementById("clumping").checked;
+            //params.preventClumping = document.getElementById("clumping").checked;
+            params.preventClumping = document.getElementById("true");
             params.mortalityRate = document.getElementById("mortality").value;
             params.contagionRate = document.getElementById("contagion").value;
             params.speed = document.getElementById("speed").value;
@@ -125,11 +126,11 @@
                     meet more other people and infect them but always according to contagion factor.  
             </div>
 
-            <div class="mdl-textfield" id="clumplabel"> Disable Clumping</div>
-            <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="clumping">
-                <span class="mdl-switch__label"> </span>
-                <input type="checkbox" id="clumping" class="mdl-switch__input">
-            </label>
+            <!--div class="mdl-textfield" id="clumplabel"> Disable Clumping</div-->
+            <!--label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="clumping"-->
+                <!--span class="mdl-switch__label"> </span-->
+                <!--input type="checkbox" id="clumping" class="mdl-switch__input"-->
+            <!--/label-->
             <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="clumplabel" >
                 For small values of Social Distancing people travel more and can clump. 
                 Disabling clumping intelligently keeps them moving. Although a clump should in theory spread the virus faster, 
@@ -175,7 +176,7 @@
             x="0"
             y="0"
             width="100%"
-            height="80%"
+            height="90%"
             viewBox="0 0 160 120"
             border-color="red"
             border-width="2px"
