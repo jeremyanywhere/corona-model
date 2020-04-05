@@ -64,6 +64,7 @@ var Region = /** @class */ (function () {
             var vv = new VirusVector("vv" + p, x, y, this.width, this.height);
             var h = vv.hash();
             // if random position is taken, just scoot along in linear fashion to find a spot. 
+            //
             if (this.people.has(h)) {
                 var nxt = h;
                 while (this.people.has(nxt)) {
