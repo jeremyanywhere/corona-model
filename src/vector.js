@@ -12,6 +12,18 @@ var __values = (this && this.__values) || function (o) {
 };
 //import { timingSafeEqual } from "crypto";
 // for purposes of this code. A Vector is a carrier of a virus, not a data structure
+function normalDist(range) {
+    var u = 0, v = 0;
+    while (u === 0)
+        u = Math.random(); //Converting [0,1) to (0,1)
+    while (v === 0)
+        v = Math.random();
+    var num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    num = num / 10.0 + 0.5; // Translate to 0 -> 1
+    if (num > 1 || num < 0)
+        return normalDist(range); // resample between 0 and 1
+    return num * range * 2;
+}
 var Params = /** @class */ (function () {
     function Params() {
     }
@@ -22,8 +34,8 @@ var Region = /** @class */ (function () {
     function Region(width, height, scale) {
         console.log("constructing population.. " + width + "," + height + "scale:" + scale);
         this.scale = scale;
-        this.width = Math.floor(width / scale);
-        this.height = Math.floor(height / scale);
+        this.width = Math.floor(width);
+        this.height = Math.floor(height);
         this.people = new Map();
         this.createVectors();
         this.days = 0;
@@ -31,8 +43,9 @@ var Region = /** @class */ (function () {
         this.counter = 0;
         this.movements = 0; // 12 to a day. 
         this.infected = 0;
+        this.currentInfected = 0;
         this.recovered = 0;
-        console.log("population movement with " + params.movement);
+        this.peak = 0;
     }
     Region.prototype.xyToIndex = function (x, y) {
         return y * this.width + x;
@@ -47,7 +60,7 @@ var Region = /** @class */ (function () {
         for (var p = 0; p < params.population; p++) {
             var x = Math.floor(Math.random() * this.width);
             var y = Math.floor(Math.random() * this.height);
-            var vv = new VirusVector(x, y, this.width, this.height);
+            var vv = new VirusVector("vv" + p, x, y, this.width, this.height);
             var h = vv.hash();
             // if random position is taken, just scoot along in linear fashion to find a spot. 
             if (this.people.has(h)) {
@@ -56,15 +69,45 @@ var Region = /** @class */ (function () {
                     nxt = nxt + 1 % (this.width * this.height);
                 }
                 var n = this.indexToXY(nxt);
-                vv = new VirusVector(n.x, n.y, this.width, this.height);
+                //vv = new VirusVector(n.x,n.y,this.width, this.height) - is this necessary? why not change indices..
+                vv.x = n.x;
+                vv.y = n.y;
                 h = nxt;
             }
             if (p == 0) {
                 vv.infectedDays = 1;
                 vv.infected = true;
                 this.infected++;
+                this.currentInfected++;
             }
             this.people.set(h, vv);
+            //console.log("created VVector at "+ vv.x + "," + vv.y)
+        }
+        this.createSVGElements();
+    };
+    Region.prototype.createSVGElements = function () {
+        var e_1, _a;
+        var svgi = document.getElementById('svgId');
+        var circ;
+        try {
+            for (var _b = __values(this.people.values()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var v = _c.value;
+                circ = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circ.id = v.id;
+                circ.setAttribute("cx", "" + v.x);
+                circ.setAttribute("cy", "" + v.y);
+                circ.setAttribute('r', "0.5");
+                circ.setAttribute("style", "fill:blue;stroke-width:0");
+                svgi.appendChild(circ);
+                v.svgElement = circ;
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+            }
+            finally { if (e_1) throw e_1.error; }
         }
     };
     // first spreads infection to anyone in proximity if infectedDays bigger than 1 day.
@@ -75,7 +118,7 @@ var Region = /** @class */ (function () {
     // their direction changes by drunken sailor rules.
     //  
     Region.prototype.movePeople = function () {
-        var e_1, _a;
+        var e_2, _a;
         this.movements++;
         this.days = Math.floor(this.movements / 12);
         var spread = 1;
@@ -110,6 +153,7 @@ var Region = /** @class */ (function () {
                         else {
                             v.recovered = true;
                             this.recovered++;
+                            this.currentInfected--;
                         }
                     }
                 }
@@ -140,12 +184,12 @@ var Region = /** @class */ (function () {
                 nextGen.set(v.hash(), v);
             }
         }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
             }
-            finally { if (e_1) throw e_1.error; }
+            finally { if (e_2) throw e_2.error; }
         }
         if (this.people.size != nextGen.size) {
             console.log("Man Overboard.. " + (this.people.size - nextGen.size));
@@ -170,82 +214,56 @@ var Region = /** @class */ (function () {
                             neighb.infectedDays = 0;
                             v.infectees++;
                             this.infected++;
+                            this.currentInfected++;
+                            if (this.peak < this.currentInfected) {
+                                this.peak = this.currentInfected;
+                            }
                         }
                     }
                 }
             }
         }
     };
-    Region.prototype.drawGridOnCanvasContext = function (ctxt) {
-        var e_2, _a, e_3, _b;
-        var tote = 0;
-        ctxt.fillStyle = "#00ffff";
-        var color = "#00ffff";
+    Region.prototype.renderGridInSVG = function (svg) {
+        var e_3, _a;
+        var circ;
+        var color;
         try {
-            for (var _c = __values(this.people.values()), _d = _c.next(); !_d.done; _d = _c.next()) {
-                var v = _d.value;
-                color = '#0000ff'; // blue
+            //var vv: VirusVector
+            //console.log("Children of DUNE (svg) "+svg.childElementCount)
+            for (var _b = __values(this.people.values()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var v = _c.value;
+                //console.log("looking for circle in vector - "+v.id+ " "+ v.svgElement)
+                circ = v.svgElement;
+                circ.setAttribute('cx', "" + v.x);
+                circ.setAttribute('cy', "" + v.y);
+                color = "#2222FF"; // blue
                 if (v.infected)
-                    color = "#ff0000"; // red
+                    color = "#FF0000"; // red
+                //if (v.recovered) console.log("Oh yes.. I have Recovered!")
                 if (v.recovered)
                     color = "#22AA22"; // green
                 if (v.died)
                     color = "#AA00AA";
-                ctxt.fillStyle = color;
-                if (v.oldX != v.x || v.oldY != v.y && !this.people.has(this.xyToIndex(v.oldX, v.oldY))) {
-                    ctxt.clearRect(v.oldX * this.scale, v.oldY * this.scale, this.scale, this.scale);
-                }
-                if (v.died) {
-                    ctxt.fillRect(v.x * this.scale - 1, v.y * this.scale - 1, this.scale + 2, this.scale + 2);
-                }
-                else {
-                    ctxt.fillRect(v.x * this.scale, v.y * this.scale, this.scale, this.scale);
-                }
-                //console.log("x and y are "+v.x+","+v.y)
-            }
-        }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-        finally {
-            try {
-                if (_d && !_d.done && (_a = _c["return"])) _a.call(_c);
-            }
-            finally { if (e_2) throw e_2.error; }
-        }
-        this.testIdxConversion();
-        // dashboard
-        var border = 2;
-        var text = ["Population:" + params.population,
-            "Days:" + this.days,
-            "Infected: " + this.infected,
-            "Deaths:" + this.deaths,
-            "Recovered:" + this.recovered];
-        var fontSize = 3 * this.scale;
-        var textW = fontSize / 3 * 2;
-        var textH = fontSize;
-        var longestText = 0;
-        try {
-            for (var text_1 = __values(text), text_1_1 = text_1.next(); !text_1_1.done; text_1_1 = text_1.next()) {
-                var t = text_1_1.value;
-                if (t.length > longestText)
-                    longestText = t.length;
+                circ.setAttribute("style", ("fill:" + color + ";stroke-width:0"));
             }
         }
         catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
-                if (text_1_1 && !text_1_1.done && (_b = text_1["return"])) _b.call(text_1);
+                if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
             }
             finally { if (e_3) throw e_3.error; }
         }
-        var dashX = (this.width * this.scale) - (longestText * textW);
-        var dashY = textH * 3;
-        ctxt.font = "" + fontSize + "px Verdana";
-        //ctxt.fillStyle = "#FFF111"
-        ctxt.clearRect(dashX - border, dashY - border, longestText * textW, textH * text.length + 2 * border);
-        ctxt.fillStyle = "#000000";
-        for (var pos = 0; pos < text.length; pos++) {
-            ctxt.fillText(text[pos], dashX, dashY + textH * (pos + 1));
-        }
+        this.drawBanner();
+    };
+    Region.prototype.drawBanner = function () {
+        document.getElementById("deathbanner").innerHTML = ("Deaths: " + this.deaths);
+        document.getElementById("infectedbanner").innerHTML = ("Total Infected: " + this.infected);
+        document.getElementById("recoveredbanner").innerHTML = ("Recovered: " + this.recovered);
+        document.getElementById("populationbanner").innerHTML = ("Population: " + this.people.size);
+        document.getElementById("daybanner").innerHTML = ("Days: " + this.days);
+        document.getElementById("peakbanner").innerHTML = ("Peak Infection: " + (Math.round((this.peak / this.people.size) * 1000) / 10) + "%");
     };
     Region.prototype.testIdxConversion = function () {
         var e_4, _a;
@@ -270,7 +288,8 @@ var Region = /** @class */ (function () {
 }());
 /// keeps going in the same direction with a low probability of changing (drunken walk)
 var VirusVector = /** @class */ (function () {
-    function VirusVector(x, y, width, height) {
+    function VirusVector(id, x, y, width, height) {
+        this.id = id;
         this.x = x;
         this.y = y;
         this.width = width;
@@ -283,16 +302,17 @@ var VirusVector = /** @class */ (function () {
         this.direction.y = Math.floor(Math.random() * 3) - 1;
         this.infected = false;
         this.infectees = 0;
+        var n = normalDist(params.contagionRate);
         // turn a real no. into a random int with the same probabilistic outcome. 
-        var n = params.contagionRate;
         this.maxNeighboursCanInfect = Math.floor(n) + ((Math.random() < (n - Math.floor(n))) ? 1 : 0);
         // when we reach this duration, we either die or recover depending on willdie
-        this.durationOfDisease = Math.floor(7 + Math.random() * 14);
         this.willDie = (Math.random() * 100 < params.mortalityRate);
         if (this.willDie) {
             // on average deaths will occur in shorter time frame than recovery. 
-            this.durationOfDisease = Math.floor(this.durationOfDisease / 2);
-            //console.log("you, buddy, have this no. of days to live.. "+ this.durationOfDisease)
+            this.durationOfDisease = normalDist(params.avgTimeToDeath);
+        }
+        else {
+            this.durationOfDisease = normalDist(params.avgTimeToRecovery);
         }
         this.walkFactor = Math.pow(2, 8);
     }
@@ -339,18 +359,20 @@ var VirusVector = /** @class */ (function () {
 // abstraction of our canvas element. 
 var Canvas = /** @class */ (function () {
     function Canvas() {
-        this.SCALE = 5;
+        this.SCALE = 1;
         this.timeStamp = 0;
         console.log("Constructing..");
         this.x = 0;
         this.populationSize = params.population;
         this.checkDays = -1;
-        this.canvas = document.getElementById('canvas');
-        console.log("canvas =" + this.canvas);
-        this.context = this.canvas.getContext("2d");
-        console.log("context = " + this.context);
-        this.context.lineWidth = 1;
-        this.scale = 5;
+        //this.canvas = document.getElementById('canvas') as
+        //         HTMLCanvasElement;
+        this.svg = document.getElementById('svgId');
+        //console.log(`canvas =${this.canvas}`)
+        //this.context = this.canvas.getContext("2d");
+        //console.log(`context = ${this.context}`)
+        //this.context.lineWidth = 1;
+        this.scale = 1;
         this.movement = params.movement;
     }
     Canvas.prototype.watchdog = function () {
@@ -368,31 +390,57 @@ var Canvas = /** @class */ (function () {
         this.redraw();
     };
     Canvas.prototype.clear = function () {
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        var e_5, _a;
+        var svgi = document.getElementById('svgId');
+        try {
+            for (var _b = __values(this.region.people.values()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var v = _c.value;
+                svgi.removeChild(v.svgElement);
+            }
+        }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+            }
+            finally { if (e_5) throw e_5.error; }
+        }
     };
     Canvas.prototype.start = function () {
+        this.dumpParams();
+        var viewbox = this.svg.getAttributeNS("http://www.w3.org/2000/svg", 'viewbox');
+        console.log("viewbox x is " + viewbox);
+        this.region = new Region(160, 120, this.SCALE);
+        this.redraw();
+        //this.intervalWatchdog = setInterval(this.watchdog.bind(this), params.speed);
+    };
+    Canvas.prototype.startOLD = function () {
         //must garbage collect the old one. 
         this.dumpParams();
-        this.region = new Region(this.canvas.width, this.canvas.height, this.SCALE);
+        this.region = new Region(this.canvas.clientWidth, this.canvas.clientHeight, this.SCALE);
         this.redraw();
         this.intervalWatchdog = setInterval(this.watchdog.bind(this), params.speed);
     };
     Canvas.prototype.dumpParams = function () {
         console.log("Parameters are:");
-        console.log("speed " + params.speed);
-        console.log("reset " + params.reset);
-        console.log("preventClumping " + params.preventClumping);
-        console.log("contagionRate " + params.contagionRate);
-        console.log("mortalityRate " + params.mortalityRate);
-        console.log("movement " + params.movement);
+        console.log("   speed " + params.speed);
+        console.log("   reset " + params.reset);
+        console.log("   preventClumping " + params.preventClumping);
+        console.log("   contagionRate " + params.contagionRate);
+        console.log("   mortalityRate " + params.mortalityRate);
+        console.log("   movement " + params.movement);
+        console.log("   Length " + params.simulationLength);
+        console.log("   Time to Death" + params.avgTimeToDeath);
+        console.log("   Time to Recovery" + params.avgTimeToRecovery);
     };
     Canvas.prototype.redraw = function () {
         //console.log("redraw..")
         var now = Date.now();
         if (now - this.timeStamp > params.speed) {
             this.timeStamp = now;
-            this.region.drawGridOnCanvasContext(this.context);
-            this.region.movePeople();
+            this.region.renderGridInSVG(this.svg);
+            if (this.region.days < params.simulationLength)
+                this.region.movePeople();
         }
         if (!params.reset) {
             window.requestAnimationFrame(this.redraw.bind(this));

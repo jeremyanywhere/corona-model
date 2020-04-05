@@ -3,12 +3,21 @@
 
 <head>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.4/material.min.css">
+    <!--link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.4/material.min.css"-->
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-blue.min.css" />
     <script defer src="https://storage.googleapis.com/code.getmdl.io/1.0.4/material.min.js"></script> 
     
     <link rel="stylesheet" href="node_modules/getmdl-select/getmdl-select.min.css">
     <script defer src="node_modules/getmdl-select/getmdl-select.min.js"></script>
     <script defer src="node_modules/getmdl-select/src/js/getmdl-select.js"></script>
+    <style>
+        button.my-button {
+
+        padding: 200px 200px; 
+        font-size: 13px;
+        line-height: 0px; 
+    }   
+        </style>
 </head>
 <body>
 
@@ -24,102 +33,166 @@
             params.mortalityRate = document.getElementById("mortality").value;
             params.contagionRate = document.getElementById("contagion").value;
             params.speed = document.getElementById("speed").value;
+            params.simulationLength = document.getElementById("length").value;
+            params.avgTimeToDeath = document.getElementById("deathTime").value;
+            params.avgTimeToRecovery = document.getElementById("recovery").value;
             new Canvas().start();
         }
         function reset() {
             params.reset = true
         }
     </script>
-    <div class = "column sidebar">
-        <div class="mdl-textfield " id="populationlabel">
-                Population
-                <input class="mdl-textfield__input" type="text" id="population" value="1500">
-        </div>
-        <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="populationlabel" >
-            Population size for the region. The region is bounded, but wraps around, i.e. any people moving off one side of the region will appear on the other.
-        </div>
-            <div class="mdl-textfield " id="contagionlabel">
-            Contagion Factor (R0) 
-            <input class="mdl-textfield__input" type="text" id="contagion" value="2.0">
-        </div>
-        <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="contagionlabel" >
-            R0 is how many people on average are infected by one carrier. Less than 1 means a virus will die out. More than 1 causes a spread. Corona is between 2 and 3 at the moment hence the pandemic. Infections are shown by red dots.       </div>
-        <div class="mdl-textfield " id="mortalitylabel">
-            Mortality Rate %  
-            <input class="mdl-textfield__input" type="text" id="mortality" value="6">
-        </div>
-        <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="mortalitylabel" >
-            Mortality Rate is the percentage of infected people who die. Current figures for Corona Virus are between 4% and 10% depending on region. Recovered people are shown by green dots. Deaths by larger, purple dots.
-        </div>
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+        <header class="mdl-layout__header">
+            <div class="mdl-layout__header-row">
+                <span class="mdl-layout-title" id="populationbanner"> Population: 0 </span>
+                <div class="mdl-layout-spacer"></div>
+                <span class="mdl-layout-title" id="daybanner"> Days: 0 </span>
+                <div class="mdl-layout-spacer"></div>
+                <span class="mdl-layout-title" id="deathbanner"> Deaths: 0 </span>
+                <div class="mdl-layout-spacer"></div>
+                <span class="mdl-layout-title" id="infectedbanner"> Total Infected: 0 </span>
+                <div class="mdl-layout-spacer"></div>
+                <span class="mdl-layout-title" id="recoveredbanner"> Recovered: 0 </span>
+                <div class="mdl-layout-spacer"></div>
+                <span class="mdl-layout-title" id="peakbanner"> Peak Infection: 0% </span>
+                <div class="mdl-layout-spacer"></div>
 
-        <p>
-        <div class="mdl-textfield mdl-js-textfield getmdl-select">
-            <div id="mvm_label">Social Distancing %</div>
-            <input type="text" value="" class="mdl-textfield__input" id="mvm" readonly>
-            <input type="hidden" value="" name="mvm_val">
-            <i class="mdl-icon-toggle__label material-icons">keyboard_arrow_down</i>
-            <label for="mvm" class="mdl-textfield__label">Social Distancing %</label>
-            <ul for="mvm" class="mdl-menu mdl-menu--bottom-left mdl-js-menu">
-                <li class="mdl-menu__item" data-val="1">10</li>
-                <li class="mdl-menu__item" data-val="2">20</li>
-                <li class="mdl-menu__item" data-val="3" data-selected="true">30</li>
-                <li class="mdl-menu__item" data-val="4">40</li>
-                <li class="mdl-menu__item" data-val="5">50</li>
-                <li class="mdl-menu__item" data-val="6">60</li>
-                <li class="mdl-menu__item" data-val="7">70</li>
-                <li class="mdl-menu__item" data-val="8">80</li>
-                <li class="mdl-menu__item" data-val="9">90</li>
-            </ul>
-        </div>
-        <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="mvm_label" >
-            Social Distancing affects the travel distance of each person. 
-                For higher values, they move in a smaller, more confined way and collide with 
-                each other less, hence spreading the virus less. For lower values they will
-                meet more other people and infect them but always according to contagion factor.  
-        </div>
-        </p>
-        <div class="mdl-textfield" id="clumplabel"> Disable Clumping</div>
-        <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="clumping">
-            <span class="mdl-switch__label"> </span>
-            <input type="checkbox" id="clumping" class="mdl-switch__input">
-        </label>
-        <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="clumplabel" >
-            For small values of Social Distancing people travel more and can clump. 
-            Disabling clumping intelligently keeps them moving. Although a clump should in theory spread the virus faster, 
-            in the simulation it might miss contact and not get infected and so not really model a "gathering".
-        </div>
-          
-        <div class="mdl-textfield" id="speedlabel">
-            Refresh Speed (ms per move)  
-            <input class="mdl-textfield__input" type="text" id="speed" value="500">
-        </div>
-        <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="speedlabel" >
-            Changes the refresh rate of the simulation. There are 12 "moves" or refreshes for a single day. After between 2 and 3 weeks,
-            a person will either recover or die (according to the mortality rate)
-        </div>         
-        <br></br>  
-        <p>
-        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" onClick="start()">
-            Start 
-        </button>
-        </p>
-        <p>
-        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" onClick="reset()">
-            Reset 
-        </button>
-        </p>
-    </div>
-    <div class = "column content">
-        <p>
-        <canvas id="canvas" width="1200" height="800"
-        style="border: 1px solid black;">
-        </canvas>
-        <script> var exports = {}; </script>
-        <script src="./src/vector.js"></script>
-        </p>
-    </div>
+            </div>
+        </header>
+        <main class="mdl-layout__content">
+            <div class="page-content">
+        <div class="mdl-grid">
+            <div class="mdl-cell mdl-cell--2-col">
+            <div class="mdl-textfield " id="populationlabel">
+                    Population
+                    <input class="mdl-textfield__input" type="text" id="population" value="700">
+            </div>
+            <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="populationlabel" >
+                Population size for the region. The region is bounded, but wraps around, i.e. any people moving off one side of the region will appear on the other.
+            </div>
+                <div class="mdl-textfield " id="contagionlabel">
+                Contagion Factor (R0) 
+                <input class="mdl-textfield__input" type="text" id="contagion" value="2.5">
+            </div>
+            <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="contagionlabel" >
+                R0 is how many people on average are infected by one carrier. Less than 1 means a virus will die out. More than 1 causes a spread. Corona is between 2 and 3 at the moment hence the pandemic. Infections are shown by red dots.       </div>
+            <div class="mdl-textfield " id="mortalitylabel">
+                Mortality Rate %  
+                <input class="mdl-textfield__input" type="text" id="mortality" value="6">
+            </div>
+            <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="mortalitylabel" >
+                Mortality Rate is the percentage of infected people who die. Current figures for Corona Virus are between 4% and 10% depending on region. Recovered people are shown by green dots. Deaths by larger, purple dots.
+            </div>
+            <div class="mdl-textfield " id="deathTimeLabel">
+                Average Time To Death (days)  
+                <input class="mdl-textfield__input" type="text" id="deathTime" value="12">
+            </div>
+            <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="deathTimeLabel" >
+                How many days does it take on average for infected people to die. They die according to mortality rate. 
+            </div>
+            <div class="mdl-textfield " id="recoverylabel">
+                Average Time To Recovery (days)  
+                <input class="mdl-textfield__input" type="text" id="recovery" value="12">
+            </div>
+            <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="recoverylabel" >
+                How many days does it take on average for infected people to recover. They recover inversely to the mortality rate. 
+            </div>
 
- 
+        
+            <div class="mdl-textfield mdl-js-textfield getmdl-select">
+                <div id="mvm_label">Social Distancing %</div>
+                <input type="text" value="" class="mdl-textfield__input" id="mvm" readonly>
+                <input type="hidden" value="" name="mvm_val">
+                <i class="mdl-icon-toggle__label material-icons">keyboard_arrow_down</i>
+                <label for="mvm" class="mdl-textfield__label">Social Distancing %</label>
+                <ul for="mvm" class="mdl-menu mdl-menu--bottom-left mdl-js-menu">
+                    <li class="mdl-menu__item" data-val="1">10</li>
+                    <li class="mdl-menu__item" data-val="2">20</li>
+                    <li class="mdl-menu__item" data-val="3">30</li> 
+                    <li class="mdl-menu__item" data-val="4">40</li>
+                    <li class="mdl-menu__item" data-val="5" data-selected="true">50</li>
+                    <li class="mdl-menu__item" data-val="6">60</li>
+                    <li class="mdl-menu__item" data-val="7">70</li>
+                    <li class="mdl-menu__item" data-val="8">80</li>
+                    <li class="mdl-menu__item" data-val="9">90</li>
+                </ul>
+            </div>
+            <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="mvm_label" >
+                Social Distancing affects the travel distance of each person. 
+                    For higher values, they move in a smaller, more confined way and collide with 
+                    each other less, hence spreading the virus less. For lower values they will
+                    meet more other people and infect them but always according to contagion factor.  
+            </div>
+
+            <div class="mdl-textfield" id="clumplabel"> Disable Clumping</div>
+            <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="clumping">
+                <span class="mdl-switch__label"> </span>
+                <input type="checkbox" id="clumping" class="mdl-switch__input">
+            </label>
+            <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="clumplabel" >
+                For small values of Social Distancing people travel more and can clump. 
+                Disabling clumping intelligently keeps them moving. Although a clump should in theory spread the virus faster, 
+                in the simulation it might miss contact and not get infected and so not really model a "gathering".
+            </div>
+            <div class="mdl-textfield " id="lengthlabel">
+                Simulation Length (days)  
+                <input class="mdl-textfield__input" type="text" id="length" value="60">
+            </div>
+            <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="lengthlabel" >
+                How many days you want the simulation to run for. Each vector will move 12 times in one day. 
+            </div>
+            <div class="mdl-textfield" id="speedlabel">
+                Refresh Speed (ms per move)  
+                <input class="mdl-textfield__input" type="text" id="speed" value="75">
+            </div>
+            <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="speedlabel" >
+                Changes the refresh rate of the simulation. There are 12 "moves" or refreshes for a single day. After a number of days
+                an infected person will either recover or die (according to the mortality rate)
+            </div>         
+            <br></br>  
+
+            <div class="mdl-grid">
+                <div class="mdl-cell mdl-cell--4-col">
+                    <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" onClick="start()">
+                        Start 
+                    </button>
+                </div>
+                <div class="mdl-cell mdl-cell--4-col">
+                    <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" onClick="reset()">
+                        Reset 
+                    </button>
+                </div>
+            </div>
+        </div>
+    
+        <div id="containerId" class="mdl-card mdl-cell mdl-cell--10-col ">    
+            <svg 
+            id="svgId" 
+            xmlns:svg="http://www.w3.org/2000/svg"
+            xmlns="http://www.w3.org/2000/svg"
+            version="1.1"
+            x="0"
+            y="0"
+            width="100%"
+            height="100%"
+            viewBox="0 0 160 120"
+            border-color="red"
+            border-width="2px"
+            preserveAspectRatio="none">
+                <rect id="myborder" x="0" y="0" width="160" height="120"
+                style="fill:none;stroke:black;stroke-width:1"/>
+
+            </svg>
+
+        </div>
+        </div>
+    </div>
+    </main>
+
+    </div>
+    <script> var exports = {}; </script>
+    <script src="./src/vector.js"></script>
 
     <style>
         * {

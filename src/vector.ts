@@ -36,6 +36,8 @@ class Region {
     movements: number
     deaths: number
     infected:number
+    currentInfected: number
+    peak:number
     recovered:number
     counter:number
     params:Params
@@ -53,7 +55,9 @@ class Region {
         this.counter = 0
         this.movements = 0 // 12 to a day. 
         this.infected = 0
+        this.currentInfected = 0
         this.recovered = 0
+        this.peak = 0
     }
     xyToIndex(x: number, y: number) {
         return y * this.width + x
@@ -85,6 +89,7 @@ class Region {
                 vv.infectedDays = 1
                 vv.infected = true
                 this.infected++
+                this.currentInfected++
             }   
             this.people.set(h,vv)
             //console.log("created VVector at "+ vv.x + "," + vv.y)
@@ -99,7 +104,7 @@ class Region {
             circ.id = v.id
             circ.setAttribute("cx", ""+v.x)
             circ.setAttribute("cy", ""+v.y)
-            circ.setAttribute('r',"0.3")
+            circ.setAttribute('r',"0.5")
             circ.setAttribute("style","fill:blue;stroke-width:0")
             svgi.appendChild(circ)
             v.svgElement = circ
@@ -147,6 +152,7 @@ class Region {
                     } else {
                         v.recovered = true
                         this.recovered++
+                        this.currentInfected--
                     }
 
                 }
@@ -200,60 +206,14 @@ class Region {
                             neighb.infectedDays = 0
                             v.infectees++
                             this.infected++ 
+                            this.currentInfected++
+                            if (this.peak < this.currentInfected) {
+                                this.peak = this.currentInfected
+                            }
                         }
                     }
                 }
             }
-        }
-    }
-
-    drawGridOnCanvasContext(ctxt: CanvasRenderingContext2D) {
-        let tote = 0
-        ctxt.fillStyle = "#00ffff"
-        let color = "#00ffff"
-        for(let v of this.people.values()) {
-            color = '#0000ff' // blue
-            if (v.infected) color = "#ff0000" // red
-            if (v.recovered) color = "#22AA22" // green
-            if (v.died) color = "#AA00AA" 
-            ctxt.fillStyle = color
-            if (v.oldX != v.x || v.oldY != v.y && !this.people.has(this.xyToIndex(v.oldX, v.oldY))) {
-                ctxt.clearRect(v.oldX*this.scale,v.oldY*this.scale,this.scale,this.scale)
-            }
-            if (v.died) {
-                ctxt.fillRect(v.x*this.scale-1, v.y*this.scale-1,this.scale+2, this.scale+2)
-            } else {
-                ctxt.fillRect(v.x*this.scale, v.y*this.scale,this.scale, this.scale)
-            }
-            //console.log("x and y are "+v.x+","+v.y)
-        }
-        //this.testIdxConversion()
-        // dashboard
-        
-        var border = 2
-        var text = ["Population:" + params.population,
-                    "Days:" + this.days, 
-                    "Infected: "+ this.infected,
-                    "Deaths:"+this.deaths,
-                    "Recovered:" + this.recovered]
-        
-        var fontSize = 3*this.scale
-        var textW = fontSize/3*2
-        var textH = fontSize
-        
-        let longestText = 0
-        for (let t of text) {
-            if (t.length > longestText) 
-                longestText = t.length
-        }
-        var dashX = (this.width*this.scale)-(longestText*textW) 
-        var dashY = textH*3
-        ctxt.font = ""+fontSize+"px Verdana";
-        //ctxt.fillStyle = "#FFF111"
-        ctxt.clearRect(dashX - border,dashY-border,longestText*textW, textH*text.length + 2*border)
-        ctxt.fillStyle = "#000000"
-        for (let pos=0; pos< text.length; pos++) {
-            ctxt.fillText(text[pos], dashX, dashY+textH*(pos+1))
         }
     }
     renderGridInSVG(svg: HTMLElement) {
@@ -274,8 +234,17 @@ class Region {
             if (v.died) color = "#AA00AA" 
             circ.setAttribute("style",("fill:"+color+";stroke-width:0"))
         }
-        let dc = document.getElementById("deathcount")
-        dc.innerHTML = ("Deaths: "+this.deaths)
+        this.drawBanner()
+
+    }
+    drawBanner() {
+        document.getElementById("deathbanner").innerHTML = ("Deaths: "+this.deaths)
+        document.getElementById("infectedbanner").innerHTML = ("Total Infected: "+this.infected)
+        document.getElementById("recoveredbanner").innerHTML = ("Recovered: "+this.recovered)
+        document.getElementById("populationbanner").innerHTML = ("Population: "+this.people.size)
+        document.getElementById("daybanner").innerHTML = ("Days: "+this.days)
+        document.getElementById("peakbanner").innerHTML = ("Peak Infection: "+ (Math.round((this.peak / this.people.size)*1000)/10)+"%")
+
     }
     testIdxConversion() {
         for(let k of this.people.keys()) {
@@ -432,18 +401,22 @@ class Canvas {
         this.redraw()
     }
     clear() {
-        this.context.clearRect(0,0,this.svg.clientWidth, this.svg.clientHeight)
+        var svgi = document.getElementById('svgId')
+        for(let v of this.region.people.values()) {
+            svgi.removeChild(v.svgElement)
+        }
+
     }
-    start2() {
+    start() {
         this.dumpParams()
         var viewbox = this.svg.getAttributeNS("http://www.w3.org/2000/svg",'viewbox') 
         console.log("viewbox x is "+viewbox)
         this.region = new Region(160, 120, this.SCALE)
-        this.redraw2()
+        this.redraw()
         //this.intervalWatchdog = setInterval(this.watchdog.bind(this), params.speed);
 
     }
-    start() {
+    startOLD() {
         //must garbage collect the old one. 
         this.dumpParams()
         
@@ -463,27 +436,12 @@ class Canvas {
         console.log("   Time to Death" + params.avgTimeToDeath)
         console.log("   Time to Recovery"+params.avgTimeToRecovery)
     }
-    private redraw2() {
-        //console.log("redraw..")
-        let now = Date.now();
-        if (now-this.timeStamp > params.speed) {
-            this.timeStamp = now;
-            this.region.renderGridInSVG(this.svg);
-            if (this.region.days < params.simulationLength)
-                this.region.movePeople();
-        }
-        if (!params.reset) {
-            window.requestAnimationFrame(this.redraw2.bind(this));
-        } else {
-            this.clear()
-        }
-    }
     private redraw() {
         //console.log("redraw..")
         let now = Date.now();
         if (now-this.timeStamp > params.speed) {
             this.timeStamp = now;
-            this.region.drawGridOnCanvasContext(this.context);
+            this.region.renderGridInSVG(this.svg);
             if (this.region.days < params.simulationLength)
                 this.region.movePeople();
         }
