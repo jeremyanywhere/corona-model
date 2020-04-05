@@ -368,7 +368,7 @@ class Canvas {
     private timeStamp: number = 0;
     private populationSize: number
     private movement: number
-    private intervalWatchdog: any
+    private intervalWatchdog: any //any
 
 
     constructor() {
