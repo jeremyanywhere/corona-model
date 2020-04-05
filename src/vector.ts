@@ -367,7 +367,7 @@ class Canvas {
     private scale: number;
     private timeStamp: number = 0;
     private populationSize: number
-    private movement: number
+    private movement: number //
     private intervalWatchdog: any //any
 
 
