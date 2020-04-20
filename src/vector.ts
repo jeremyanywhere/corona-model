@@ -1,8 +1,5 @@
 //k2N4/3N4/1P1N4/1P1N4/1P1N4/1P1N4/1P1N4/7K w - - 0 1
 /// basically a grid, which has a population of vectors.. who could have 
-
-//import { timingSafeEqual } from "crypto";
-
 // for purposes of this code. A Vector is a carrier of a virus, not a data structure
 
 function normalDist(range: number): number  {
@@ -25,6 +22,7 @@ class Params {
     public simulationLength: number
     public avgTimeToDeath: number
     public avgTimeToRecovery: number
+    public googleVisualization: any
 }
  let params = new Params()
 
@@ -167,7 +165,7 @@ class Region {
                 && !nextGen.has(this.xyToIndex(nm.x, nm.y))) {
                     v.executeMove()
                     // now give it the chance to change direction next time. 
-                    v.randomWalk()
+                    v.walk()
                     moved++
                 } else {
                     // if we can't move and we don't force a direction change
@@ -244,7 +242,6 @@ class Region {
         document.getElementById("populationbanner").innerHTML = ("Population: "+this.people.size)
         document.getElementById("daybanner").innerHTML = ("Days: "+this.days)
         document.getElementById("peakbanner").innerHTML = ("Peak Infection: "+ (Math.round((this.peak / this.people.size)*1000)/10)+"%")
-
     }
     testIdxConversion() {
         for(let k of this.people.keys()) {
@@ -260,6 +257,7 @@ class Region {
 
 /// keeps going in the same direction with a low probability of changing (drunken walk)
 class VirusVector {
+    steps: number // number of steps compared to social distancing parameter before direction changed. 
     id: string
     svgElement: SVGElement
     infected: boolean
@@ -280,7 +278,7 @@ class VirusVector {
     maxNeighboursCanInfect: number 
     infectees: number
     durationOfDisease: number // we calculate up front to make life easier. 
-    walkFactor: number // make social distancing / random walk parameters exponential
+ 
     constructor(id:string, x:number, y:number, width:number, height:number) {
         this.id = id
         this.x = x
@@ -295,6 +293,7 @@ class VirusVector {
         this.direction.y = Math.floor(Math.random() * 3)-1
         this.infected = false
         this.infectees = 0
+        this.steps = 0;
         
         let n = normalDist(params.contagionRate)
         // turn a real no. into a random int with the same probabilistic outcome. 
@@ -309,12 +308,12 @@ class VirusVector {
             this.durationOfDisease = normalDist(params.avgTimeToRecovery)
         }     
         
-        this.walkFactor = 2**8
+
     }
 
 
    /// gets an x and y coord e.g. using the direction + width of grid. 
-   // (0,-1) or (1,1) allows to test if there is something else at that point. 
+   // (0,-1) or (1,1) allows to test if there is another at that grid location before executing. 
 
     getNextMove() {
         let xd = (this.x + this.direction.x + this.width)%this.width
@@ -330,21 +329,25 @@ class VirusVector {
         this.x = mv.x
         this.y = mv.y
     }
-    // changes direction based on a random value. 
-    randomWalk() {
-        if (Math.random()*100 > params.movement) 
+    // changes direction based on a number of steps. 
+    walk() {
+        if (this.steps < params.movement) {
+            this.steps++
             return
+        }
+            
+        //if (Math.random()*100 > params.movement) 
+        //    return
         this.changeDirection()
     }
     // change the direction vector randomly 
     changeDirection() {
+        this.steps = 0
         this.direction.x = 0; this.direction.y = 0
-        // might both be zero
-        this.direction.x = Math.floor(Math.random() * 3)-1
-        this.direction.y = Math.floor(Math.random() * 3)-1
-        // for debugging purposes. Let's remove 0 directions.
-        if (this.direction.x ==0 && this.direction.y == 0) {
-            this.direction.x = 1
+        // cannot be zero direction. 
+        while(this.direction.x == 0 && this.direction.y == 0) {
+            this.direction.x = Math.floor(Math.random() * 3)-1
+            this.direction.y = Math.floor(Math.random() * 3)-1
         }
     }
     //use the hash to store in a set for quicker calculation.
@@ -369,6 +372,7 @@ class Canvas {
     private populationSize: number
     private movement: number //
     private intervalWatchdog: any //any
+    private chart: Chart
 
 
     constructor() {
@@ -408,21 +412,20 @@ class Canvas {
 
     }
     start() {
+        //TODO: put a reset in here.. 
         this.dumpParams()
         var viewbox = this.svg.getAttributeNS("http://www.w3.org/2000/svg",'viewbox') 
         console.log("viewbox x is "+viewbox)
-        this.region = new Region(160, 120, this.SCALE)
+        this.region = new Region(300, 120, this.SCALE)
+
         this.redraw()
         //this.intervalWatchdog = setInterval(this.watchdog.bind(this), params.speed);
-
-    }
-    startOLD() {
-        //must garbage collect the old one. 
-        this.dumpParams()
         
-        this.region = new Region(this.canvas.clientWidth, this.canvas.clientHeight, this.SCALE)
-        this.redraw()
-        this.intervalWatchdog = setInterval(this.watchdog.bind(this), params.speed);
+        this.chart = new Chart('Box Office Earnings in First Two Weeks of Opening','in millions of dollars (USD)', 300,1900)
+        this.chart.initChart()
+        this.chart.draw()
+         
+
     }
     dumpParams() {
         console.log("Parameters are:") 
@@ -431,10 +434,12 @@ class Canvas {
         console.log("   preventClumping " + params.preventClumping)
         console.log("   contagionRate " + params.contagionRate)
         console.log("   mortalityRate " + params.mortalityRate)
-        console.log("   movement " + params.movement)
+        console.log("   movement/distancing " + params.movement)
         console.log("   Length "+ params.simulationLength)
         console.log("   Time to Death" + params.avgTimeToDeath)
         console.log("   Time to Recovery"+params.avgTimeToRecovery)
+
+
     }
     private redraw() {
         //console.log("redraw..")
@@ -453,6 +458,57 @@ class Canvas {
     }
     
 }
+class Chart {
+    data: any
+    options: {}
+    gChart: any;//google.visualization.LineChart
+    constructor (graphTitle: string, subTitle: string, height:number, width:number) {
+        this.options = {
+            chart: {
+                title: graphTitle,
+                subtitle: subTitle
+            },
+            width: width,
+            height: height
+        }
+        this.gChart = new params.googleVisualization.LineChart(document.getElementById('linechart_material'))
+    }   
+
+    addRow(row:[]) {
+        this.data.addRow(row)
+    }
+
+    draw() {
+        this.gChart.draw(this.data, this.options)
+    }
+
+    initChart() {
+        this.data = new params.googleVisualization.DataTable();
+        this.data.addColumn('number', 'Day');
+        this.data.addColumn('number', 'Guardians of the Galaxy');
+        this.data.addColumn('number', 'The Avengers');
+        this.data.addColumn('number', 'Transformers: Age of Extinction');
+        this.data.addRows([
+            [1,  37.8, 80.8, 41.8],
+            [2,  30.9, 69.5, 32.4],
+            [3,  25.4,   57, 25.7],
+            [4,  11.7, 18.8, 10.5],
+            [5,  11.9, 17.6, 10.4],
+            [6,   8.8, 13.6,  7.7],
+            [7,   7.6, 12.3,  9.6],
+            [8,  12.3, 29.2, 10.6],
+            [9,  16.9, 42.9, 14.8],
+            [10, 12.8, 30.9, 11.6],
+            [11,  5.3,  7.9,  4.7],
+            [12,  6.6,  8.4,  5.2],
+            [13,  4.8,  6.3,  3.6],
+            [14,  4.2,  6.2,  3.4]
+            ]);
+
+    }
+
+};
+
+
 
 //new Canvas().test();
-
