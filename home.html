@@ -24,7 +24,7 @@
             params.reset = false
             params.googleVisualization = google.visualization
             params.population = document.getElementById("population").value;
-            params.movement = document.getElementById("mvm").value;
+            params.movement = 2**(4-document.getElementById("mvm").value);
             //params.preventClumping = document.getElementById("clumping").checked;
             params.preventClumping = document.getElementById("true");
             params.mortalityRate = document.getElementById("mortality").value;
@@ -44,6 +44,9 @@
         }
         function reset() {
             params.reset = true
+        }
+        function updateSlider(myId, val) {
+            document.getElementById(myId).innerHTML=val
         }
     </script>
     <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
@@ -90,7 +93,7 @@
                 <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="contagionlabel" >
                     R0 is how many people on average are infected by one carrier. Less than 1 means a virus will die out. More than 1 causes a spread. Corona is between 2 and 3 at the moment hence the pandemic. Infections are shown by red dots.</div>
                     <div class="mdl-textfield " id="mortalitylabel">
-                    Mortality Rate %  
+                    Mortality Rate <span>42</span>%  
                     <input class="mdl-textfield__input" type="text" id="mortality" value="6">
                 </div>
                 <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="mortalitylabel" >
@@ -112,12 +115,13 @@
                 <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="recoverylabel" >
                     How many days does it take on average for infected people to recover. They recover inversely to the mortality rate. 
                 </div>
-
-
                 <div class="mdl-textfield " id="mvmLabel">
-                    Social Distancing %  
-                    <input class="mdl-textfield__input" type="text" id="mvm" value="5">
+
+                    Social Distancing <span id="socdistlab">3</span>  
+                    <input class="mdl-slider mdl-js-slider" type="range" id="mvm"
+                    min="0" max="4" value="3" tabindex="0" onchange="updateSlider('socdistlab',this.value)">
                 </div>
+
                 <div class="mdl-tooltip mdl-tooltip--large mdl-typography--title" for="mvmLabel" >
                     Social Distancing affects the travel distance of each person. 
                     For higher values, they move in a smaller, more confined way and collide with 
@@ -174,7 +178,8 @@
                     </svg>
 
                 </div>
-                <div class="graph-panel" id="linechart_material"> 
+                <div class="graph-panel" id="linechart_material">
+                
                 </div>
             </div>
         </main>
